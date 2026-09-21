@@ -35,7 +35,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from dogcare.vocab import LESION_TERMS, terms_allowed_by
+from dogcare.vocab import LESION_TERMS, group_name, terms_allowed_by
 
 #: 피부 모델이 붙이는 면책. **모델이 쓰는 문장이 아니라 코드가 붙이는 문장입니다.**
 #: 그래서 원문 대조가 성립합니다 — 모델이 바꿔 쓸 수 있는 것이면 못 잽니다.
@@ -102,14 +102,19 @@ def g1_lesion_name(answer: str, facts: TurnFacts) -> list[GateViolation]:
     stage2.group 이 null 이면 그 턴에는 아무 이름도 못 씁니다. 확신이 있어
     "표면 변화" 를 내놓았으면 그 조각만 열립니다.
 
-    계열 이름 둘(미란·궤양 · 결절·종괴)은 6종 이름과 글자가 같습니다. 그래서
-    "궤양" 을 무조건 막으면 **승인된 문장까지 막힙니다.** 여는 열쇠는 group 입니다.
+    지금 계열 이름 넷(솟아오른 변화 · 피부 표면·색·두께 변화 · 벗겨지거나 패인
+    상처 · 깊거나 단단한 혹)은 **6종과 글자가 하나도 안 겹칩니다.** 그래서 계열
+    문장은 이 게이트를 건드리지 않습니다. 옛 이름은 겹쳤고(`미란·궤양` 은 A5 와
+    같은 글자였습니다) 그때는 group 이 열쇠였습니다 — 그 배선은 남겨 둡니다.
+    이름이 또 바뀌어도 여기가 따라옵니다.
     """
     if not facts.skin_related:
         return []
     group = None
     if facts.screening:
-        group = (facts.screening.get("stage2") or {}).get("group")
+        # ⚠️ stage2.group 은 **dict** 입니다 ({"name", "prob", "text", "labels", …}).
+        #    문자열로 알고 다루다가 실기기에서 AttributeError 로 죽은 적이 있습니다.
+        group = group_name((facts.screening.get("stage2") or {}).get("group"))
     allowed = terms_allowed_by(group)
     low = answer.lower()
     hits = sorted({t for t in LESION_TERMS - allowed if t.lower() in low})
@@ -197,7 +202,44 @@ def g5_needs_photo(answer: str, facts: TurnFacts) -> list[GateViolation]:
                           "판정은 사진이 있을 때만 합니다 — 사진을 요청해야 합니다")]
 
 
-GATES = (g1_lesion_name, g2_disclaimer, g3_citations, g4_ensemble_arms, g5_needs_photo)
+# ──────────────────────────────────────────────────────────────
+# G6 — 찾아보지 않고 자료가 없다고 말함
+# ──────────────────────────────────────────────────────────────
+#: 코퍼스에 무엇이 있는지 **주장하는** 말투. 이걸 쓰려면 검색을 했어야 합니다.
+_COVERAGE_CLAIMS = (
+    "자료에 없", "자료가 없", "자료에 포함", "자료에는", "자료를 찾을 수 없",
+    "정보가 없", "정보는 없", "정보에 포함", "내용이 없", "내용은 없",
+    "범위에 포함", "상담 범위", "제공해 드릴 수 있는 자료", "보유한 자료",
+    "다루지 않", "포함되어 있지 않",
+)
+
+
+def g6_unchecked_coverage(answer: str, facts: TurnFacts) -> list[GateViolation]:
+    """**찾아보지도 않고** "그건 자료에 없습니다" 라고 말하면 막습니다.
+
+    평가에서 실제로 나온 답입니다 — "고양이 모래" 와 "중성화 비용" 에 모델이
+    RAG 를 한 번도 부르지 않고 "제가 제공해 드릴 수 있는 자료에 포함되어 있지
+    않습니다" 라고 답했습니다. 헛조언은 아니지만 **코퍼스에 대한 거짓말**입니다.
+    코퍼스에 뭐가 있는지는 검색해 봐야 압니다.
+
+    저쪽 RAG 가 같은 데서 넘어진 적이 있습니다 — "자료 없음" 으로 라벨해 둔
+    평가 문항의 자료가 실은 코퍼스에 있었습니다. 사람도 틀리는 걸 모델이
+    안 틀릴 리 없습니다.
+
+    거절 자체를 막는 게 아닙니다. **검색한 뒤에** 없다고 하는 건(`coverage`
+    가 `none`) 정당합니다 — 그게 저쪽이 0/4 → 7/7 로 만든 바로 그 능력입니다.
+    """
+    if facts.rag_coverage is not None:
+        return []                       # 찾아보고 한 말이면 정당하다
+    hits = [c for c in _COVERAGE_CLAIMS if c in answer]
+    if not hits:
+        return []
+    return [GateViolation("G6", "찾아보지 않고 자료가 없다고 말했습니다",
+                          f"{hits[0]!r} — ask_behavior_question 을 부른 적이 없습니다")]
+
+
+GATES = (g1_lesion_name, g2_disclaimer, g3_citations, g4_ensemble_arms,
+         g5_needs_photo, g6_unchecked_coverage)
 
 
 @dataclass

@@ -13,6 +13,7 @@ import 하나로 둘 다 안 뜹니다.
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 from contextlib import AsyncExitStack
@@ -160,7 +161,16 @@ class Subagents:
         # dict 를 돌려주는 툴은 structured_content 로 옵니다 (mcp 1.x 는 structuredContent).
         if sc := _attr(res, "structured_content", "structuredContent"):
             return sc.get("result", sc) if isinstance(sc, dict) else sc
-        return "".join(getattr(c, "text", "") for c in res.content)
+        text = "".join(getattr(c, "text", "") for c in res.content)
+        # ★ 서버가 structured_content 를 안 채우고 **JSON 을 글자로** 보내는 일이
+        #   있습니다. 그때 문자열을 그대로 위로 올리면 `_facts` 가 dict 가 아니라고
+        #   흘려보내고, **게이트가 피부 턴에서 통째로 눈을 감습니다.** 답은 멀쩡해
+        #   보여서 아무도 모릅니다 — 실제로 그랬습니다. 여기서 되돌려 놓습니다.
+        try:
+            parsed = json.loads(text)
+        except (ValueError, TypeError):
+            return text
+        return parsed if isinstance(parsed, dict | list) else text
 
     def note_failures(self) -> str:
         if not self.failed:

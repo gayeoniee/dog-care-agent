@@ -33,9 +33,28 @@ from dogcare.subagents import Subagents  # noqa: E402
 RULE = "─" * 60
 
 
+def _box(raw: str | None) -> list[float] | None:
+    """`"0.1,0.52,0.55,0.28"` → `[0.1, 0.52, 0.55, 0.28]`.
+
+    ⚠️ **이걸 안 주면 판정이 조용히 달라집니다.** 저쪽 1단계는 네모의 *중심*만,
+    2단계는 네모의 *크기*를 씁니다. 없으면 화면 중앙으로 물러서는데, 병변이
+    가운데 있지 않으면 엉뚱한 데를 봅니다 (실제로 결절 사진이 정상으로 나왔습니다).
+    """
+    if not raw:
+        return None
+    try:
+        parts = [float(x) for x in raw.replace(" ", "").split(",")]
+    except ValueError:
+        raise SystemExit(f"--box 를 숫자로 읽을 수 없습니다: {raw!r} (x,y,w,h)") from None
+    if len(parts) != 4 or not all(0.0 <= v <= 1.0 for v in parts):
+        raise SystemExit(f"--box 는 0~1 사이 네 숫자입니다: {raw!r}")
+    return parts
+
+
 async def _ask(args: argparse.Namespace) -> int:
     settings = get_settings()
-    turn = await run_turn(args.question, image_path=args.image, settings=settings)
+    turn = await run_turn(args.question, image_path=args.image,
+                          guide_box=_box(args.box), settings=settings)
 
     print(RULE)
     print(turn.answer)
@@ -75,6 +94,9 @@ def main() -> int:
     a = sub.add_parser("ask", help="한 번 물어봅니다")
     a.add_argument("question")
     a.add_argument("--image", help="피부 사진 경로")
+    a.add_argument("--box", metavar="x,y,w,h",
+                   help="촬영 가이드 프레임 (0~1 정규화). 병변에 맞춘 네모입니다. "
+                        "안 주면 화면 중앙으로 물러섭니다 — 2단계가 학습과 어긋납니다")
     a.add_argument("--trace", action="store_true", help="실행 기록을 파일로 남깁니다")
     a.set_defaults(fn=_ask)
 

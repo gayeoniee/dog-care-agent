@@ -6,6 +6,14 @@
                                                      └ 위반 → 한 번 고쳐 쓰게
                                                               → 또 위반 → 코드가 조립
 
+고쳐 쓰는 방식이 두 가지입니다.
+
+* 보통은 **문장만** 고치게 합니다. 툴은 다시 못 부릅니다 — 같은 사실 위에서
+  말을 고르는 일이라 새 사실이 필요 없습니다.
+* G6(찾아보지 않고 자료가 없다고 말함)이면 **툴을 다시 열어 줍니다.** 말을
+  고쳐서 될 일이 아니라 가서 찾아봐야 하는 일입니다. 찾아본 뒤에는 사실이
+  달라졌으므로 _facts 를 다시 모으고 게이트를 다시 겁니다.
+
 마지막 갈래가 요점입니다. 게이트가 두 번 걸리면 **LLM 을 빼고** 서브에이전트가
 돌려준 문장들로 답을 맞춥니다. 그 문장들은 저쪽 저장소가 이미 사람에게 보여도
 된다고 정한 것이라, 조립한 결과는 정의상 안전합니다. 답이 조금 뻣뻣해지지만
@@ -34,6 +42,15 @@ _REPAIR = """방금 답은 내보낼 수 없습니다. 걸린 것:
 같은 툴 결과로 다시 쓰세요. 툴을 새로 부르지 말고, 걸린 부분만 고치세요.
 병변 이름을 쓸 수 없으면 어떤 병변인지는 이 사진만으로 판단하기 어렵다고
 두세요 — 지어내지 말고 모른다고 하는 게 맞습니다."""
+
+#: G6 전용. 말을 고치라는 게 아니라 **찾아보라**는 말입니다.
+_REPAIR_SEARCH = """방금 답은 내보낼 수 없습니다. 걸린 것:
+
+{violations}
+
+자료에 무엇이 있는지는 검색해 봐야 압니다. 지금 ask_behavior_question 을
+불러서 실제로 찾아보세요. 그 결과 coverage 가 none 이면 그때 자료가 없다고
+말하면 됩니다 — 그건 정당합니다."""
 
 
 class Turn:
@@ -105,7 +122,33 @@ def _compose(calls: list[ToolCall], facts: TurnFacts) -> str:
     return _attach_disclaimer("\n\n".join(p for p in parts if p), facts)
 
 
+async def _execute(tool_calls: list[dict[str, Any]], agents: Subagents, trace: Trace,
+                   messages: list[dict[str, Any]], pinned: dict[str, dict[str, Any]]) -> None:
+    """툴을 부르고 결과를 대화와 기록 양쪽에 남깁니다.
+
+    `pinned` 는 **모델이 정하면 안 되는 인자**입니다. 사진 경로와 가이드 프레임은
+    요청에 들어 있는 사실이지 모델이 고를 것이 아닙니다. 그대로 두면 모델이
+    경로를 조금 다르게 쓰거나(그러면 파일을 못 찾습니다) 네모를 지어냅니다 —
+    2단계는 **네모의 크기**를 쓰기 때문에 지어낸 네모는 조용히 판정을 바꿉니다.
+    """
+    for tc in tool_calls:
+        fn = tc["function"]
+        args = json.loads(fn.get("arguments") or "{}")
+        args.update(pinned.get(fn["name"], {}))
+        call = trace.add(ToolCall(name=fn["name"], arguments=args))
+        t0 = time.perf_counter()
+        try:
+            call.result = await agents.call(fn["name"], args)
+        except Exception as exc:
+            call.error = f"{type(exc).__name__}: {exc}"
+            call.result = {"error": call.error}
+        call.elapsed_ms = round((time.perf_counter() - t0) * 1000, 1)
+        messages.append({"role": "tool", "tool_call_id": tc["id"],
+                         "content": json.dumps(call.result, ensure_ascii=False)})
+
+
 async def run_turn(question: str, image_path: str | None = None,
+                   guide_box: list[float] | None = None,
                    history: list[dict[str, str]] | None = None,
                    settings: Settings | None = None,
                    sub: Subagents | None = None) -> Turn:
@@ -115,8 +158,15 @@ async def run_turn(question: str, image_path: str | None = None,
 
     async def _go(agents: Subagents) -> Turn:
         llm = ToolCallingLLM(settings)
-        user = question if not image_path else (
-            f"{question}\n\n[사진이 있습니다. 경로: {image_path}]")
+        pinned: dict[str, dict[str, Any]] = {}
+        user = question
+        if image_path:
+            pinned["screen_skin_photo"] = {"image_path": image_path}
+            note = "[사진이 있습니다. screen_skin_photo 를 부르세요"
+            if guide_box:
+                pinned["screen_skin_photo"]["guide_box"] = guide_box
+                note += " — 가이드 프레임도 함께 주어졌습니다"
+            user = f"{question}\n\n{note}. 경로와 프레임은 코드가 채웁니다.]"
         messages: list[dict[str, Any]] = [{"role": "system", "content": SYSTEM}]
         messages += list(history or [])
         messages.append({"role": "user", "content": user})
@@ -130,19 +180,7 @@ async def run_turn(question: str, image_path: str | None = None,
             if not tool_calls:
                 draft = msg.get("content") or ""
                 break
-            for tc in tool_calls:
-                fn = tc["function"]
-                args = json.loads(fn.get("arguments") or "{}")
-                call = trace.add(ToolCall(name=fn["name"], arguments=args))
-                c0 = time.perf_counter()
-                try:
-                    call.result = await agents.call(fn["name"], args)
-                except Exception as exc:
-                    call.error = f"{type(exc).__name__}: {exc}"
-                    call.result = {"error": call.error}
-                call.elapsed_ms = round((time.perf_counter() - c0) * 1000, 1)
-                messages.append({"role": "tool", "tool_call_id": tc["id"],
-                                 "content": json.dumps(call.result, ensure_ascii=False)})
+            await _execute(tool_calls, agents, trace, messages, pinned)
         else:
             # 왕복 한도를 다 썼는데 모델이 답을 안 냈습니다. 더 돌리지 않습니다 —
             # 루프가 도는 걸 모르고 토큰을 태우는 게 제일 흔한 사고입니다.
@@ -153,12 +191,23 @@ async def run_turn(question: str, image_path: str | None = None,
         report = check(answer, facts)
 
         if not report.ok and draft:
-            # ★ 한 번은 고쳐 쓸 기회를 줍니다. 무엇이 걸렸는지 그대로 알려주고,
-            #   툴은 다시 못 부르게 합니다 (같은 사실 위에서 문장만 고치는 일입니다).
-            messages.append({"role": "user",
-                             "content": _REPAIR.format(violations=str(report))})
+            # ★ 한 번은 고쳐 쓸 기회를 줍니다. 무엇이 걸렸는지 그대로 알려줍니다.
+            #   보통은 툴을 못 부르게 합니다 — 같은 사실 위에서 문장만 고르는 일입니다.
+            #   G6 만 다릅니다. "찾아보지 않고 자료가 없다고 말했다" 는 말이 아니라
+            #   **행동**이 틀린 것이라, 말을 고쳐서는 안 되고 가서 찾아봐야 합니다.
+            search = any(v.gate == "G6" for v in report.violations)
+            template = _REPAIR_SEARCH if search else _REPAIR
+            messages.append({"role": "user", "content": template.format(violations=str(report))})
             trace.rounds += 1
-            msg = await llm.chat(messages)
+            msg = await llm.chat(messages, agents.tools if search else None)
+            messages.append(msg)
+            if search and (tool_calls := msg.get("tool_calls") or []):
+                await _execute(tool_calls, agents, trace, messages, pinned)
+                trace.rounds += 1
+                msg = await llm.chat(messages)
+                messages.append(msg)
+                # 툴을 더 불렀으니 **사실이 달라졌습니다.** 다시 모읍니다.
+                facts = _facts(question, image_path, trace.calls, settings)
             answer = _attach_disclaimer(msg.get("content") or "", facts)
             report = check(answer, facts)
 

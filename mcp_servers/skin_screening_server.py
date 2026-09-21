@@ -89,25 +89,44 @@ def _load() -> Any:
     return _agent
 
 
+#: 모델에게 주지 않는 자리. **6종 이름이 실려 오는 곳 전부**입니다.
+#:   distribution  6종 확률 분포 (앱은 안 그리고 콘솔이 씁니다)
+#:   labels        계열마다 붙는 용어 풀이 — 내용이 곧 6종 한글 이름입니다
+#:                 ("비듬·각질·상피성잔고리·태선화·과다색소침착")
+_HIDDEN_FROM_MODEL = ("distribution", "labels")
+
+
+def _strip(obj):
+    """`labels` 같은 키를 **중첩 구조 어디서든** 떼어냅니다."""
+    if isinstance(obj, dict):
+        return {k: _strip(v) for k, v in obj.items() if k not in _HIDDEN_FROM_MODEL}
+    if isinstance(obj, list):
+        return [_strip(v) for v in obj]
+    return obj
+
+
 def _for_model(contract: dict) -> dict:
-    """모델에게 건넬 판정 뷰. **6종 분포를 뺍니다.**
+    """모델에게 건넬 판정 뷰. **6종 이름이 실린 자리를 전부 뺍니다.**
 
     게이트 G1 이 6종 이름을 문장에서 막지만, 그건 마지막 그물입니다. 첫 줄은
-    **애초에 안 보여주는 것**입니다 — 분포를 주면 모델은 1등을 고르고 싶어지고,
-    프롬프트로 참으라고 하는 것보다 안 주는 편이 싸고 확실합니다.
+    **애초에 안 보여주는 것**입니다 — 이름을 쥐여주고 쓰지 말라고 부탁하는 건
+    안 주는 것보다 비싸고 덜 확실합니다.
 
-    모델이 볼 것은 계열(`groups`·`group`)까지입니다. 그게 저쪽이 사람에게
-    말해도 된다고 정한 선입니다 (2026-09-08 결정).
-    전체 계약은 오케스트레이터의 trace 에 그대로 남습니다 — 숨기는 게 아니라
-    **모델에게만 안 주는** 것입니다.
+    처음에는 `distribution` 만 뺐는데, **`labels` 로 고스란히 새고 있었습니다.**
+    저쪽은 계열 네 줄 **전부에** 용어 풀이를 같은 방식으로 실어서 앱 "자세히
+    보기" 에 둡니다 — 사람에게는 단정이 아니라 풀이입니다. 그런데 산문을 쓰는
+    LLM 은 그 뉘앙스를 못 지키고 하나를 고릅니다.
+
+    모델이 볼 것은 계열 **이름과 확률**까지입니다 (`솟아오른 변화` 같은
+    보호자 말). 전체 계약은 오케스트레이터의 trace 에 그대로 남습니다 —
+    숨기는 게 아니라 **모델에게만 안 주는** 것입니다.
     """
     if SHOW_DISTRIBUTION:
         return contract
-    view = {k: v for k, v in contract.items() if k != "stage2"}
-    s2 = contract.get("stage2") or {}
-    view["stage2"] = {k: v for k, v in s2.items() if k != "distribution"}
-    view["_note"] = ("6종 분포는 의도적으로 빠져 있습니다. 병변 이름을 말하면 안 됩니다 — "
-                     "holdout 에서 1등 이름이 56.6% 틀렸습니다. 계열(group)까지만 말하세요.")
+    view = _strip(contract)
+    view["_note"] = ("6종 병변 이름은 의도적으로 빠져 있습니다. 이름을 말하면 안 됩니다 — "
+                     "holdout 에서 1등 이름이 56.6% 틀렸습니다. "
+                     "stage2.group.text 를 그대로 쓰세요.")
     return view
 
 
