@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+.venv/
+.uv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# 키는 .env 에만. .env.example 만 커밋한다.
+.env
+.env.*
+!.env.example
+
+# 실행 기록 — 사용자 사진 경로와 질문이 들어간다. 커밋하지 않는다.
+traces/
+runs/
+
+# 평가 산출물 (요약 리포트만 커밋)
+evals/out/
+
+.vscode/
+.idea/
+.DS_Store

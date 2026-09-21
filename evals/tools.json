@@ -1,0 +1,112 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "ask_behavior_question",
+      "description": "반려견 문제행동·훈련 상담. **출처가 확인된 자료 안에서만** 답합니다.\n\n    자료에 없는 주제면 답을 지어내지 않고 coverage=\"none\" 으로 돌아옵니다.\n    원인이 여러 갈래인 질문이면 coverage=\"needs_detail\" 로 되묻습니다.\n\n    Args:\n        question: 보호자의 질문 (한국어 구어 그대로 주세요 — 재작성은 저쪽이 합니다).\n        history: 이전 대화. [{\"role\": \"user\"|\"assistant\", \"content\": \"...\"}]\n        top_k: 근거 개수. 기본 5.\n\n    Returns:\n        answer 는 [자료 N] 으로 인용합니다. **그 N 은 sources 의 순번입니다 —\n        sources 개수를 넘는 번호를 새로 붙이지 마세요.**",
+      "parameters": {
+        "properties": {
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "history": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array",
+            "default": null,
+            "title": "History"
+          },
+          "top_k": {
+            "type": "integer",
+            "default": null,
+            "title": "Top K"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "type": "object",
+        "title": "ask_behavior_questionArguments"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "factcheck_claim",
+      "description": "인터넷에서 본 훈련 조언을 코퍼스에 대고 검증합니다.\n\n    주장별로 근거 있음 / 자료와 배치 / 자료 없음을 판정합니다.\n    지배이론(\"서열을 잡아라\")처럼 AVSAB 가 공식 반박한 조언이 여기서 걸립니다.",
+      "parameters": {
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "top_k": {
+            "type": "integer",
+            "default": null,
+            "title": "Top K"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "type": "object",
+        "title": "factcheck_claimArguments"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "behavior_rag_health",
+      "description": "코퍼스가 적재돼 있나. 청크 수와 임베딩 모델을 돌려줍니다.",
+      "parameters": {
+        "properties": {},
+        "type": "object",
+        "title": "behavior_rag_healthArguments"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "screen_skin_photo",
+      "description": "반려견 피부 사진 한 장을 스크리닝합니다. 진단이 아니라 \"병원에 가볼 만한가\" 까지입니다.\n\n    Args:\n        image_path: 사진 파일 경로.\n        guide_box: 촬영 가이드 프레임 [x, y, w, h] (0~1 정규화, 원본 기준).\n            병변에 맞춰 준 네모입니다. 없으면 화면 중앙으로 물러섭니다 —\n            2단계는 네모 **크기**를 쓰기 때문에 없으면 학습과 어긋납니다.\n\n    Returns:\n        판정 계약. verdict 는 normal / abnormal / retake.\n        **병변 6종 이름은 들어 있지 않습니다.** 계열(group)까지만 말하세요.",
+      "parameters": {
+        "properties": {
+          "image_path": {
+            "title": "Image Path",
+            "type": "string"
+          },
+          "guide_box": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "default": null,
+            "title": "Guide Box"
+          }
+        },
+        "required": [
+          "image_path"
+        ],
+        "type": "object",
+        "title": "screen_skin_photoArguments"
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "screening_health",
+      "description": "어떤 가중치를 물고 있나. 앙상블 팔 수와 임계값을 돌려줍니다.",
+      "parameters": {
+        "properties": {},
+        "type": "object",
+        "title": "screening_healthArguments"
+      }
+    }
+  }
+]

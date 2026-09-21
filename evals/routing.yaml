@@ -1,0 +1,73 @@
+# 라우팅 평가셋 — "이 질문에 어떤 툴을 불러야 하나".
+#
+# expect_tools 는 **집합**입니다. 순서는 보지 않습니다 — 모델이 같은 질문에
+# 두 번 다른 순서로 부르는 걸 이미 봤고, 그건 틀린 게 아닙니다.
+# expect_tools 가 비어 있으면 **아무 툴도 부르지 않아야** 한다는 뜻입니다.
+#
+# ⚠️ 거절해야 통과하는 문항을 일부러 섞어 두었습니다. 다 맞히는 평가셋은
+#    아무것도 못 잽니다 (저쪽 RAG 가 같은 이유로 거절 문항을 넣었습니다).
+
+- id: leash
+  question: 산책할 때 줄을 너무 당겨요
+  expect_tools: [ask_behavior_question]
+
+- id: barking
+  question: 초인종 소리만 나면 미친듯이 짖어요 어떡하죠
+  expect_tools: [ask_behavior_question]
+
+- id: separation
+  question: 혼자 두면 계속 울어요
+  expect_tools: [ask_behavior_question]
+
+- id: coprophagia
+  question: 똥을 먹어요
+  expect_tools: [ask_behavior_question]
+
+- id: factcheck-dominance
+  question: "인터넷에서 봤는데 이거 맞나요? \"강아지가 말을 안 들으면 서열이 흔들린 거라 목덜미를 잡고 눕혀야 한다\""
+  expect_tools: [factcheck_claim]
+
+- id: factcheck-alpha
+  question: "이 글 검증해주세요: 밥은 사람이 먼저 먹어야 서열이 잡힌다"
+  expect_tools: [factcheck_claim]
+
+- id: skin-with-photo
+  question: 여기 좀 봐주세요
+  image: fixtures/skin.jpg
+  expect_tools: [screen_skin_photo]
+
+- id: skin-with-photo-and-question
+  question: 여기가 자꾸 빨개지는데 산책을 줄여야 할까요
+  image: fixtures/skin.jpg
+  expect_tools: [screen_skin_photo, ask_behavior_question]
+
+# ★ 사진이 없는 피부 질문 — **판정하면 안 됩니다.** 사진을 달라고 해야 합니다.
+- id: skin-no-photo
+  question: 우리 개 배가 자꾸 빨개지는데 무슨 병인가요
+  expect_tools: []
+  expect_asks_photo: true
+
+- id: skin-no-photo-2
+  question: 등쪽에 딱지 같은 게 생겼어요 뭘까요
+  expect_tools: []
+  expect_asks_photo: true
+
+- id: out-of-scope-cat
+  question: 고양이 모래는 어떤 게 좋아요
+  expect_tools: [ask_behavior_question]
+
+- id: out-of-scope-cost
+  question: 중성화 수술 비용이 얼마예요
+  expect_tools: [ask_behavior_question]
+
+- id: crate
+  question: 켄넬 훈련이 도움이 될까요
+  expect_tools: [ask_behavior_question]
+
+- id: puppy-biting
+  question: 3개월 강아지가 손을 자꾸 깨물어요
+  expect_tools: [ask_behavior_question]
+
+- id: greeting
+  question: 안녕하세요
+  expect_tools: []
