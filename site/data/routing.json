@@ -1,8 +1,8 @@
 {
   "repeats": 3,
-  "passed": 15,
-  "total": 15,
-  "call_errors": 2,
+  "passed": 27,
+  "total": 30,
+  "call_errors": 4,
   "rows": [
     {
       "id": "leash",
@@ -56,6 +56,15 @@
             "ask_behavior_question"
           ],
           "ok": true,
+          "answer": "죄송합니다. 현재 가지고 있는 자료에는 초인종 소리에 짖는 행동에 대한 구체적인 훈련 방법이 포함되어 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "ask_behavior_question"
+          ],
+          "ok": true,
           "answer": "죄송합니다. 현재 가지고 있는 자료에는 초인종 소리에 짖는 행동에 대한 구체적인 해결 방법이 포함되어 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
           "composed": false,
           "violations": []
@@ -65,16 +74,7 @@
             "ask_behavior_question"
           ],
           "ok": true,
-          "answer": "죄송합니다. 현재 가지고 있는 자료에는 초인종 소리에 짖는 행동에 대한 구체적인 훈련 방법이 포함되어 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
-          "composed": false,
-          "violations": []
-        },
-        {
-          "tools": [
-            "ask_behavior_question"
-          ],
-          "ok": true,
-          "answer": "죄송합니다. 현재 가지고 있는 자료에는 초인종 소리에 짖는 행동에 대한 구체적인 훈련 방법이 포함되어 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
+          "answer": "죄송합니다. 현재 가지고 있는 자료에는 초인종 소리에 짖는 행동에 대한 구체적인 해결 방법이 포함되어 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
           "composed": false,
           "violations": []
         }
@@ -94,7 +94,7 @@
             "ask_behavior_question"
           ],
           "ok": true,
-          "answer": "죄송합니다. 현재 가지고 있는 자료에는 반려견이 혼자 있을 때 우는 문제에 대한 구체적인 원인이나 해결 방법이 포함되어 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
+          "answer": "죄송합니다. 질문하신 내용과 관련하여 현재 보유한 자료에서는 적절한 답변을 찾지 못했습니다. 다른 궁금한 점이 있으시면 말씀해 주세요.",
           "composed": false,
           "violations": []
         },
@@ -103,7 +103,7 @@
             "ask_behavior_question"
           ],
           "ok": true,
-          "answer": "죄송합니다. 현재 가지고 있는 자료에는 반려견이 혼자 있을 때 우는 행동에 대한 구체적인 원인이나 해결 방법이 포함되어 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
+          "answer": "죄송합니다. 현재 가지고 있는 자료로는 반려견이 혼자 있을 때 우는 문제에 대해 구체적인 답변을 드리기 어렵습니다. 다른 궁금한 점이 있으시면 말씀해 주세요.",
           "composed": false,
           "violations": []
         },
@@ -112,7 +112,7 @@
             "ask_behavior_question"
           ],
           "ok": true,
-          "answer": "죄송합니다. 현재 가지고 있는 자료에는 반려견이 혼자 있을 때 우는 문제에 대한 구체적인 해결 방법이 포함되어 있지 않습니다. 다른 궁금한 점이 있으시면 말씀해 주세요.",
+          "answer": "반려견이 혼자 있을 때 우는 행동에 대해 구체적인 상황 파악이 필요합니다. 혹시 외출 직후부터 우는지, 아니면 특정 시간대에 우는지 등 평소 아이의 행동 패턴을 조금 더 자세히 알려주실 수 있을까요? 상황을 구체적으로 말씀해 주시면 더 정확한 상담을 도와드릴 수 있습니다.",
           "composed": false,
           "violations": []
         }
@@ -150,7 +150,7 @@
             "ask_behavior_question"
           ],
           "ok": true,
-          "answer": "산책 중에는 줄이 느슨할 때만 앞으로 가게 해주세요. [자료 1]",
+          "answer": "반려견이 변을 먹는 행동은 다양한 원인이 있을 수 있습니다. 현재 가지고 있는 자료로는 구체적인 원인 파악이 어려워, 추가적인 정보가 필요합니다.\n\n혹시 반려견이 변을 먹는 상황이 주로 언제인가요? (예: 실내 배변 후 바로, 산책 중 길에서, 특정 시간대 등) 또한, 평소 식사량이나 ",
           "composed": false,
           "violations": []
         }
@@ -170,7 +170,7 @@
             "factcheck_claim"
           ],
           "ok": true,
-          "answer": "인터넷에서 보신 그 방법은 사실과 다릅니다.\n\n강아지의 행동 문제를 서열 문제로 보고 목덜미를 잡아 눕히는 방식은 지배이론에 근거한 것인데, 이는 현대 동물 행동학에서 공식적으로 반박된 잘못된 훈련법입니다. 오히려 강아지에게 공포심을 심어주거나 공격성을 유발할 수 있어 권장하지 않습니다",
+          "answer": "인터넷에서 보신 그 방법은 권장되지 않습니다. 강아지가 말을 듣지 않는 것을 서열 문제로 보아 강제로 제압하는 것은 과학적 근거가 없는 지배이론에 기반한 방식이며, 전문가 단체인 AVSAB에서도 이를 공식적으로 반박하고 있습니다. 이러한 방식은 오히려 강아지에게 공포심을 심어주거나 공격",
           "composed": false,
           "violations": []
         },
@@ -179,7 +179,7 @@
             "factcheck_claim"
           ],
           "ok": true,
-          "answer": "인터넷에서 보신 그 방법은 사실과 다릅니다.\n\n강아지의 행동 문제를 서열 문제로 해석하여 목덜미를 잡고 눕히는 방식은 지배이론에 근거한 잘못된 훈련법으로, 전문가 단체인 AVSAB에서도 공식적으로 반박한 내용입니다. 이러한 방식은 강아지에게 공포심을 심어주거나 공격성을 유발할 수 있어 ",
+          "answer": "인터넷에서 보신 그 방법은 권장되지 않습니다.\n\n강아지가 말을 듣지 않는 것을 서열 문제로 보고 강제로 제압하는 것은 지배이론에 근거한 잘못된 훈련 방식입니다. 이는 강아지에게 공포심을 심어주거나 공격성을 유발할 수 있어 전문가들은 이를 반대하고 있습니다.",
           "composed": false,
           "violations": []
         },
@@ -188,7 +188,7 @@
             "factcheck_claim"
           ],
           "ok": true,
-          "answer": "인터넷에서 보신 그 방법은 권장되지 않습니다.\n\n해당 조언은 반려견의 서열을 잡아야 한다는 이른바 지배이론에 근거하고 있는데, 이는 현대 동물 행동학 및 수의학계(AVSAB 등)에서 공식적으로 반박한 내용입니다. 강아지를 강제로 눕히는 방식은 오히려 반려견에게 공포심을 주거나 공격성을 ",
+          "answer": "인터넷에서 보신 그 방법은 권장되지 않습니다.\n\n반려견의 행동 문제를 서열 문제로 보고 강압적으로 제압하는 방식은 전문가들 사이에서도 이미 부정된 지배이론에 근거하고 있습니다. 이러한 방식은 반려견에게 공포심을 심어주거나 오히려 공격성을 유발할 수 있어 위험합니다. \n\n반려견의 행동 교",
           "composed": false,
           "violations": []
         }
@@ -200,29 +200,33 @@
         "factcheck_claim"
       ],
       "allow": [],
-      "passed": "2/2",
-      "errors": 1,
+      "passed": "3/3",
+      "errors": 0,
       "runs": [
         {
           "tools": [
             "factcheck_claim"
           ],
           "ok": true,
-          "answer": "제시해주신 내용은 현대 반려견 행동학에서 권장하지 않는 방식입니다.\n\n반려견의 서열을 잡기 위해 사람이 먼저 밥을 먹어야 한다는 주장은 지배이론에 근거한 것으로, 미국 수의동물행동학회(AVSAB) 등 전문 기관에서는 이를 공식적으로 반박하고 있습니다. 반려견과의 관계는 서열 중심이 아닌",
+          "answer": "반려견이 사람이 밥을 먼저 먹는 것을 보고 서열을 배운다는 것은 과학적 근거가 없는 지배이론에 해당합니다. 현대 행동학에서는 이러한 방식이 반려견과의 관계 형성에 도움이 되지 않는다고 보고 있습니다.",
           "composed": false,
           "violations": []
-        },
-        {
-          "tools": [],
-          "ok": false,
-          "error": "LLMError: HTTP 429 — [{\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/ra"
         },
         {
           "tools": [
             "factcheck_claim"
           ],
           "ok": true,
-          "answer": "반려견이 사람이 밥을 먼저 먹어야 서열이 잡힌다는 주장은 사실이 아닙니다. 이는 과거에 유행했던 지배 이론에 근거한 잘못된 정보로, 미국 수의동물행동학회(AVSAB) 등 전문가들은 이러한 방식이 반려견과의 관계 형성에 도움이 되지 않는다고 공식적으로 반박하고 있습니다.",
+          "answer": "반려견이 사람이 밥을 먼저 먹는 것을 보고 서열을 배운다는 것은 과학적 근거가 없는 지배이론에 기반한 주장입니다. 이는 현대 동물 행동학에서 공식적으로 반박된 내용입니다. 반려견과의 관계는 서열을 다투는 관계가 아니라 상호 신뢰와 소통을 바탕으로 형성되는 것이 중요합니다.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "factcheck_claim"
+          ],
+          "ok": true,
+          "answer": "사람이 먼저 밥을 먹어야 서열이 잡힌다는 주장은 과학적 근거가 없는 지배이론에 기반한 잘못된 정보입니다. 전문가 단체인 AVSAB에서도 이러한 방식의 서열 훈련은 반려견과의 관계에 도움이 되지 않는다고 공식적으로 반박하고 있습니다.",
           "composed": false,
           "violations": []
         }
@@ -242,7 +246,7 @@
             "screen_skin_photo"
           ],
           "ok": true,
-          "answer": "피부에 이상 소견이 보입니다. 표면 변화 계열의 증상이 확인되는데, 이 사진만으로 정확한 상태를 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요.",
+          "answer": "보내주신 사진을 확인했습니다. 피부에 이상 소견이 보입니다. 이 사진만으로 정확한 상태를 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요.",
           "composed": false,
           "violations": []
         },
@@ -251,7 +255,7 @@
             "screen_skin_photo"
           ],
           "ok": true,
-          "answer": "피부에 이상 소견이 보입니다. 표면 변화 계열의 증상이 확인되는데, 이 사진만으로 정확한 상태를 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요.",
+          "answer": "보내주신 사진을 확인했습니다. 피부에 이상 소견이 보입니다. 이 사진만으로 정확한 상태를 알기는 어려우니, 수의사 진료를 받아보시기를 권합니다.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요.",
           "composed": false,
           "violations": []
         },
@@ -260,7 +264,7 @@
             "screen_skin_photo"
           ],
           "ok": true,
-          "answer": "피부에 이상 소견이 보입니다. 이 사진만으로 정확하게 알 수 없으니 수의사 진료를 받아보시기를 권합니다. 표면 변화 계열의 소견이 확인됩니다.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요.",
+          "answer": "보내주신 사진을 확인했습니다. 피부에 이상 소견이 보입니다. 이 사진만으로 정확한 상태를 알기는 어려우니, 수의사 진료를 받아보시기를 권합니다.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요.",
           "composed": false,
           "violations": []
         }
@@ -282,7 +286,7 @@
             "screen_skin_photo"
           ],
           "ok": true,
-          "answer": "피부 사진을 확인한 결과, 표면 변화 계열의 이상 소견이 보입니다. 이 사진만으로는 정확한 상태를 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n산책과 관련해서는 산책 중 줄이 느슨할 때만 앞으로 가게 해주세요. [자료 1]\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 ",
+          "answer": "보내주신 사진을 확인한 결과, 피부에 이상 소견이 보입니다. 이 사진만으로는 정확한 상태를 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n산책과 관련해서는 산책 중에는 줄이 느슨할 때만 앞으로 가게 해주세요. [자료 1]\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체",
           "composed": false,
           "violations": []
         },
@@ -292,7 +296,7 @@
             "screen_skin_photo"
           ],
           "ok": true,
-          "answer": "피부 사진을 확인한 결과, 표면 변화 계열의 이상 소견이 보입니다. 이 사진만으로는 정확한 상태를 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n또한 산책과 관련해서는 산책 중 줄이 느슨할 때만 앞으로 가게 해주세요. [자료 1]\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진",
+          "answer": "피부에 이상 소견이 보입니다. 이 사진만으로 정확하게 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n산책과 관련해서는 산책 중에는 줄이 느슨할 때만 앞으로 가게 해주세요. [자료 1]\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로",
           "composed": false,
           "violations": []
         },
@@ -302,7 +306,7 @@
             "screen_skin_photo"
           ],
           "ok": true,
-          "answer": "피부 사진을 확인한 결과 이상 소견이 보입니다. 이 사진만으로는 정확한 상태를 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n또한 산책과 관련해서는 산책 중 줄이 느슨할 때만 앞으로 가게 해주세요. [자료 1]\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니",
+          "answer": "피부에 이상 소견이 보입니다. 이 사진만으로 정확하게 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n산책과 관련해서는 산책 중에는 줄이 느슨할 때만 앞으로 가게 해주세요. [자료 1]\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로",
           "composed": false,
           "violations": []
         }
@@ -322,7 +326,7 @@
             "ask_behavior_question"
           ],
           "ok": true,
-          "answer": "죄송합니다. 질문하신 내용과 관련하여 현재 제가 가진 자료에서는 반려견의 배가 빨개지는 원인이나 질병에 대한 구체적인 정보를 찾을 수 없었습니다.\n\n반려견의 피부 상태는 다양한 원인으로 나타날 수 있으므로, 정확한 진단과 치료를 위해 동물병원에 방문하여 수의사의 진료를 받아보시는 것을 ",
+          "answer": "죄송합니다. 현재 제가 가진 자료에는 반려견의 피부가 빨개지는 증상에 대한 의학적 정보가 포함되어 있지 않습니다.\n\n피부 문제는 원인이 매우 다양하므로, 정확한 진단을 위해 동물병원에 방문하여 수의사의 진료를 받아보시는 것을 권장합니다. 혹시 피부 부위를 촬영한 사진이 있다면, 사진을 ",
           "composed": false,
           "violations": []
         },
@@ -331,7 +335,7 @@
             "ask_behavior_question"
           ],
           "ok": true,
-          "answer": "죄송합니다. 질문하신 내용과 관련하여 현재 제가 가진 자료에서는 반려견의 배가 빨개지는 원인이나 질병에 대한 정보를 찾을 수 없었습니다.\n\n피부 문제의 경우 정확한 상태 확인을 위해 사진을 찍어 올려주시면, 병원에 방문해야 할 상황인지 스크리닝을 도와드릴 수 있습니다. 사진을 올려주실 ",
+          "answer": "죄송합니다. 현재 제가 가진 자료에는 반려견의 피부가 붉어지는 증상에 대한 정보가 없습니다.\n\n피부 문제는 원인이 매우 다양할 수 있으므로, 정확한 진단과 치료를 위해 가까운 동물병원에 방문하여 수의사에게 진료를 받아보시는 것을 권장합니다. 혹시 피부 상태를 확인할 수 있는 사진이 있다",
           "composed": false,
           "violations": []
         },
@@ -340,7 +344,7 @@
             "ask_behavior_question"
           ],
           "ok": true,
-          "answer": "죄송합니다. 반려견의 배가 빨개지는 증상에 대해서는 현재 제가 참고할 수 있는 자료에 구체적인 원인이나 질병 정보가 포함되어 있지 않습니다.\n\n피부 문제는 원인이 매우 다양할 수 있으므로, 정확한 확인을 위해 동물병원에 방문하여 수의사의 진료를 받아보시는 것을 권장합니다. 혹시 환부의 ",
+          "answer": "죄송합니다. 현재 제가 가진 자료에는 반려견의 피부가 붉어지는 증상에 대한 정보가 없습니다.\n\n피부 문제는 원인이 매우 다양하므로, 정확한 진단을 위해 동물병원에 방문하여 수의사의 진료를 받아보시는 것을 권장합니다. 혹시 피부 부위를 촬영한 사진이 있다면, 사진과 함께 다시 질문해 주시",
           "composed": false,
           "violations": []
         }
@@ -358,21 +362,21 @@
         {
           "tools": [],
           "ok": true,
-          "answer": "피부 상태를 확인하기 위해 사진을 찍어 보내주시면 더 정확한 안내가 가능합니다. 등 쪽의 병변을 잘 보이게 촬영해서 올려주세요.\n\n또한, 혹시 평소에 긁거나 핥는 행동을 자주 하는지, 최근에 바뀐 사료나 환경이 있는지 등 구체적인 상황을 알려주시면 관련 자료를 찾아 상담을 도와드리겠습니",
+          "answer": "피부 상태를 확인하기 위해 사진을 찍어 올려주시면 더 정확한 안내가 가능합니다. 사진을 올려주시면 판정을 도와드리겠습니다.\n\n또한, 혹시 반려견의 피부 문제와 관련하여 평소 궁금하셨던 점이나 다른 행동상의 변화가 있다면 함께 말씀해 주세요. 관련 자료를 찾아 상담을 도와드리겠습니다.",
           "composed": false,
           "violations": []
         },
         {
           "tools": [],
           "ok": true,
-          "answer": "피부 상태를 확인하기 위해 사진을 찍어 보내주시면 더 정확한 안내가 가능합니다. 등 쪽에 생긴 딱지 외에 가려움증이나 털 빠짐 등 다른 증상이 동반되는지, 혹은 최근에 환경 변화가 있었는지 알려주시면 상담에 도움이 됩니다. 사진을 올려주시면 병원 방문이 필요한지 확인해 드리겠습니다.",
+          "answer": "피부 상태를 정확히 확인하기 위해 사진을 찍어 올려주실 수 있을까요? 사진을 함께 보여주시면 더 자세히 살펴보고 도움을 드릴 수 있습니다.",
           "composed": false,
           "violations": []
         },
         {
           "tools": [],
           "ok": true,
-          "answer": "피부 사진을 함께 보여주시면 상태를 확인하는 데 도움이 됩니다. 사진을 찍어서 올려주실 수 있을까요?\n\n사진을 올려주시면 병원에 가보셔야 할 상황인지 확인해 드리겠습니다. 또한, 평소 반려견의 행동이나 다른 증상에 대해 궁금한 점이 있으시면 함께 말씀해 주세요.",
+          "answer": "피부 상태를 정확히 확인하기 위해 사진을 찍어 올려주실 수 있을까요? 사진을 올려주시면 확인 후 안내해 드리겠습니다.",
           "composed": false,
           "violations": []
         }
@@ -390,21 +394,21 @@
         {
           "tools": [],
           "ok": true,
-          "answer": "저는 반려견 보호자님의 상담을 돕는 역할을 하고 있습니다. 고양이에 관한 정보는 안내해 드리기 어려운 점 양해 부탁드립니다. 반려견과 관련하여 궁금한 점이 있으시면 언제든 말씀해 주세요.",
+          "answer": "죄송합니다. 저는 반려견의 행동이나 훈련, 생활에 관한 상담을 돕고 있습니다. 고양이에 관한 질문에는 도움을 드리기 어렵습니다.",
           "composed": false,
           "violations": []
         },
         {
           "tools": [],
           "ok": true,
-          "answer": "저는 반려견 보호자님의 상담을 돕는 역할을 하고 있습니다. 고양이에 관한 질문은 답변해 드리기 어려운 점 양해 부탁드립니다. 반려견과 관련하여 궁금한 점이 있으시면 언제든 말씀해 주세요.",
+          "answer": "저는 반려견의 행동과 훈련, 생활에 관한 상담을 돕고 있습니다. 고양이에 관한 질문은 답변해 드리기 어려운 점 양해 부탁드립니다. 반려견과 관련하여 궁금한 점이 있으시면 언제든 말씀해 주세요.",
           "composed": false,
           "violations": []
         },
         {
           "tools": [],
           "ok": true,
-          "answer": "저는 반려견 보호자님의 상담을 돕는 역할을 하고 있습니다. 고양이에 관한 정보는 안내해 드리기 어려운 점 양해 부탁드립니다. 반려견과 관련하여 궁금한 점이 있으시면 언제든 말씀해 주세요.",
+          "answer": "죄송합니다. 저는 반려견의 행동이나 훈련, 생활과 관련된 상담만 도와드리고 있습니다. 고양이에 대한 정보는 안내해 드리기 어려운 점 양해 부탁드립니다.",
           "composed": false,
           "violations": []
         }
@@ -424,7 +428,7 @@
             "ask_behavior_question"
           ],
           "ok": true,
-          "answer": "죄송합니다. 문의하신 중성화 수술 비용에 관한 정보는 제가 보유한 자료에 포함되어 있지 않아 정확한 답변을 드리기 어렵습니다. 동물병원마다 수술 방식이나 검사 항목이 달라 비용이 상이할 수 있으니, 가까운 동물병원에 직접 문의하시는 것을 권장합니다.",
+          "answer": "죄송합니다. 중성화 수술 비용에 관한 정보는 제가 가진 자료에 포함되어 있지 않습니다. 반려견의 건강과 관련된 구체적인 비용은 다니시는 동물병원에 직접 문의하시는 것이 가장 정확합니다.",
           "composed": false,
           "violations": []
         },
@@ -433,7 +437,7 @@
             "ask_behavior_question"
           ],
           "ok": true,
-          "answer": "죄송합니다. 문의하신 중성화 수술 비용에 관한 정보는 제가 보유한 자료에 포함되어 있지 않아 정확한 답변을 드리기 어렵습니다. 동물병원마다 수술 방식이나 검사 항목이 달라 비용이 상이할 수 있으니, 가까운 동물병원에 직접 문의하시는 것을 권장합니다.",
+          "answer": "죄송합니다. 제가 가진 자료에는 중성화 수술 비용에 대한 정보가 없습니다. 동물병원마다 수술 방식이나 검사 항목이 달라 비용이 상이할 수 있으니, 가까운 동물병원에 직접 문의하시는 것을 권장합니다.",
           "composed": false,
           "violations": []
         },
@@ -442,7 +446,7 @@
             "ask_behavior_question"
           ],
           "ok": true,
-          "answer": "죄송합니다. 문의하신 중성화 수술 비용에 관한 정보는 제가 참고하는 자료에 포함되어 있지 않습니다. 수술 비용은 병원마다 차이가 있을 수 있으니, 가까운 동물병원에 직접 문의하시는 것을 권장합니다.",
+          "answer": "죄송합니다. 중성화 수술 비용에 관한 정보는 제가 가진 자료에 포함되어 있지 않아 도움을 드리기 어렵습니다. 동물병원마다 수술 방식이나 검사 항목이 달라 비용이 상이할 수 있으니, 가까운 동물병원에 직접 문의하시는 것을 권장합니다.",
           "composed": false,
           "violations": []
         }
@@ -462,7 +466,7 @@
             "ask_behavior_question"
           ],
           "ok": true,
-          "answer": "죄송합니다. 현재 보유한 자료에는 켄넬 훈련의 효과에 대한 구체적인 내용이 포함되어 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
+          "answer": "죄송합니다. 현재 보유한 자료에는 켄넬 훈련의 효과에 대한 구체적인 내용이 없습니다. 다른 궁금한 점이 있으시면 말씀해 주세요.",
           "composed": false,
           "violations": []
         },
@@ -471,7 +475,7 @@
             "ask_behavior_question"
           ],
           "ok": true,
-          "answer": "죄송합니다. 현재 보유한 자료에는 켄넬 훈련의 효과에 대한 구체적인 내용이 포함되어 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
+          "answer": "죄송합니다. 현재 가지고 있는 자료에는 켄넬 훈련의 효과에 대한 구체적인 정보가 포함되어 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
           "composed": false,
           "violations": []
         },
@@ -480,7 +484,7 @@
             "ask_behavior_question"
           ],
           "ok": true,
-          "answer": "죄송합니다. 현재 보유한 자료에는 켄넬 훈련의 효과에 대한 구체적인 내용이 포함되어 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
+          "answer": "죄송합니다. 현재 보유한 자료에는 켄넬 훈련의 효과에 대한 구체적인 정보가 없습니다. 다른 궁금한 점이 있으시면 말씀해 주세요.",
           "composed": false,
           "violations": []
         }
@@ -500,7 +504,7 @@
             "ask_behavior_question"
           ],
           "ok": true,
-          "answer": "강아지가 손을 깨무는 행동에 대해 확인해 보았으나, 현재 보유한 자료에는 산책 시 줄을 당기는 행동에 대한 내용만 포함되어 있습니다. 강아지의 깨무는 행동과 관련해서는 구체적인 자료를 찾지 못했습니다.",
+          "answer": "죄송합니다. 질문하신 내용과 관련하여 현재 보유한 자료에서는 3개월 강아지의 깨무는 행동에 대한 구체적인 훈련법을 찾지 못했습니다. 도움을 드리지 못해 죄송합니다.",
           "composed": false,
           "violations": []
         },
@@ -509,7 +513,7 @@
             "ask_behavior_question"
           ],
           "ok": true,
-          "answer": "강아지가 손을 깨무는 행동에 대해 확인해 보았으나, 현재 보유한 자료에는 산책 시 줄을 당기는 행동에 대한 내용만 포함되어 있습니다. 강아지의 깨무는 행동과 관련해서는 구체적인 자료를 찾지 못했습니다.",
+          "answer": "죄송합니다. 현재 가지고 있는 자료에는 3개월 강아지가 손을 깨무는 행동에 대한 구체적인 훈련 방법이 포함되어 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
           "composed": false,
           "violations": []
         },
@@ -518,7 +522,7 @@
             "ask_behavior_question"
           ],
           "ok": true,
-          "answer": "강아지가 손을 깨무는 행동 때문에 고민이 많으시겠어요.\n\n현재 보유한 자료에서는 산책 시 줄을 다루는 방법에 대한 정보만 확인되어, 질문하신 깨무는 행동에 대해서는 구체적인 답변을 드리기 어렵습니다. \n\n혹시 강아지가 어떤 상황에서 주로 깨무는지, 혹은 평소에 어떤 놀이를 하는지 등 구",
+          "answer": "강아지가 손을 깨무는 행동 때문에 고민이 많으시겠어요.\n\n현재 확인된 자료에는 산책 시 줄을 당기지 않게 하는 방법 등에 대한 내용은 있으나, 강아지가 손을 깨무는 행동의 구체적인 원인이나 훈련법에 대해서는 안내해 드릴 수 있는 자료가 부족합니다. \n\n도움을 드리지 못해 죄송합니다.",
           "composed": false,
           "violations": []
         }
@@ -528,27 +532,587 @@
       "id": "greeting",
       "want": [],
       "allow": [],
-      "passed": "2/2",
-      "errors": 1,
+      "passed": "3/3",
+      "errors": 0,
       "runs": [
         {
           "tools": [],
           "ok": true,
-          "answer": "안녕하세요. 반려견과 관련하여 궁금한 점이나 고민이 있으신가요? 무엇이든 말씀해 주시면 제가 가진 자료를 바탕으로 도움을 드리겠습니다.",
+          "answer": "안녕하세요. 반려견의 행동이나 훈련, 생활과 관련해 궁금한 점이 있으신가요? 무엇이든 물어봐 주세요.",
           "composed": false,
           "violations": []
         },
         {
           "tools": [],
           "ok": true,
-          "answer": "안녕하세요. 반려견과 관련하여 궁금한 점이나 고민이 있으신가요? 무엇이든 물어봐 주세요.",
+          "answer": "안녕하세요. 반려견의 행동이나 훈련, 생활과 관련해 궁금한 점이 있으신가요? 무엇이든 물어봐 주세요.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [],
+          "ok": true,
+          "answer": "안녕하세요. 반려견의 행동이나 훈련, 생활과 관련해 궁금한 점이 있으시면 무엇이든 물어봐 주세요. 제가 가진 자료를 바탕으로 도움을 드리겠습니다.",
+          "composed": false,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "id": "skin-photo-plus-factcheck",
+      "want": [
+        "factcheck_claim",
+        "screen_skin_photo"
+      ],
+      "allow": [
+        "ask_behavior_question"
+      ],
+      "passed": "3/3",
+      "errors": 0,
+      "runs": [
+        {
+          "tools": [
+            "factcheck_claim",
+            "screen_skin_photo"
+          ],
+          "ok": true,
+          "answer": "피부에 이상 소견이 보입니다. 이 사진만으로 정확하게 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n인터넷에서 보신 사람용 연고를 반려견에게 발라도 된다는 조언에 대해서는, 확인된 자료에서 해당 내용을 찾을 수 없었습니다. 반려견의 피부는 사람보다 얇고 예민하며, 성분에 따라 독",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "factcheck_claim",
+            "screen_skin_photo"
+          ],
+          "ok": true,
+          "answer": "피부에 이상 소견이 보입니다. 이 사진만으로 정확한 상태를 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n인터넷에서 보신 사람용 연고를 반려견에게 발라도 된다는 조언은 주의가 필요합니다. 사람용 연고에는 반려견에게 독성이 있거나 피부 자극을 유발할 수 있는 성분이 포함되어 있을 ",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "factcheck_claim",
+            "screen_skin_photo"
+          ],
+          "ok": true,
+          "answer": "보내주신 사진을 확인했습니다. 피부에 이상 소견이 보입니다. 이 사진만으로는 정확한 상태를 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n인터넷에서 보신 사람용 연고를 반려견에게 발라도 된다는 조언에 대해 확인해 보았습니다. 현재 제가 가진 자료에서는 해당 내용에 대한 근거를 찾",
+          "composed": false,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "id": "three-way",
+      "want": [
+        "ask_behavior_question",
+        "factcheck_claim",
+        "screen_skin_photo"
+      ],
+      "allow": [],
+      "passed": "2/2",
+      "errors": 1,
+      "runs": [
+        {
+          "tools": [
+            "ask_behavior_question",
+            "factcheck_claim",
+            "screen_skin_photo"
+          ],
+          "ok": true,
+          "answer": "피부에 이상 소견이 보입니다. 이 사진만으로 정확하게 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n산책 시 줄을 당기는 행동에 대해서는 줄이 느슨할 때만 앞으로 가게 해주시는 것이 좋습니다 [자료 1].\n\n또한 서열을 잡아야 한다는 말은 지배이론에 근거한 것으로, 수의학계(AV",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "ask_behavior_question",
+            "factcheck_claim",
+            "screen_skin_photo"
+          ],
+          "ok": true,
+          "answer": "피부에 이상 소견이 보입니다. 이 사진만으로 정확하게 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n산책 시 줄을 당기는 행동에 대해서는 줄이 느슨할 때만 앞으로 가게 해주시는 것이 좋습니다 [자료 1].\n\n또한 서열을 잡아야 한다는 말은 지배이론에 근거한 것으로, 이는 전문가들",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "ask_behavior_question",
+            "factcheck_claim",
+            "screen_skin_photo"
+          ],
+          "ok": false,
+          "error": "LLMError: HTTP 429 — [{\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/ra"
+        }
+      ]
+    },
+    {
+      "id": "behavior-long",
+      "want": [
+        "ask_behavior_question"
+      ],
+      "allow": [],
+      "passed": "1/1",
+      "errors": 2,
+      "runs": [
+        {
+          "tools": [],
+          "ok": false,
+          "error": "LLMError: HTTP 429 — [{\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/ra"
+        },
+        {
+          "tools": [],
+          "ok": false,
+          "error": "LLMError: HTTP 429 — [{\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/ra"
+        },
+        {
+          "tools": [
+            "ask_behavior_question"
+          ],
+          "ok": true,
+          "answer": "죄송합니다. 질문하신 내용에 대해 현재 보유한 자료에서는 구체적인 답변을 찾기 어렵습니다. 반려견의 밤중 짖음과 관련하여 추가적인 정보가 필요할 수 있으니, 전문가의 상담을 받아보시는 것을 권장합니다.",
+          "composed": false,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "id": "factcheck-plain",
+      "want": [
+        "factcheck_claim"
+      ],
+      "allow": [
+        "ask_behavior_question"
+      ],
+      "passed": "3/3",
+      "errors": 0,
+      "runs": [
+        {
+          "tools": [
+            "ask_behavior_question",
+            "factcheck_claim"
+          ],
+          "ok": true,
+          "answer": "죄송합니다. 질문하신 내용에 대해 현재 보유한 자료에서는 확인되는 정보가 없습니다. 다른 궁금한 점이 있으시면 말씀해 주세요.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "ask_behavior_question",
+            "factcheck_claim"
+          ],
+          "ok": true,
+          "answer": "죄송합니다. 질문하신 내용에 대해 현재 보유한 자료에서는 확인되는 정보가 없습니다. 다른 궁금한 점이 있으시면 말씀해 주세요.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "ask_behavior_question",
+            "factcheck_claim"
+          ],
+          "ok": true,
+          "answer": "죄송합니다. 질문하신 내용에 대해 현재 제가 가진 자료에서는 확인되는 정보가 없습니다. 다른 궁금한 점이 있으시면 말씀해 주세요.",
+          "composed": false,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "id": "emergency-ish",
+      "want": [
+        "ask_behavior_question"
+      ],
+      "allow": [],
+      "passed": "0/3",
+      "errors": 0,
+      "runs": [
+        {
+          "tools": [],
+          "ok": false,
+          "answer": "죄송합니다만, 저는 반려견의 행동이나 훈련, 생활 습관에 관한 상담을 돕고 있습니다. 초콜릿 섭취와 같은 응급 상황은 즉시 가까운 동물병원에 연락하시거나 24시간 동물병원 응급실로 방문하셔야 합니다. 초콜릿은 반려견에게 매우 위험할 수 있으니 지체하지 말고 전문가의 도움을 받으시길 바랍",
           "composed": false,
           "violations": []
         },
         {
           "tools": [],
           "ok": false,
+          "answer": "죄송합니다만, 저는 반려견의 행동이나 훈련, 생활 습관에 관한 상담을 돕는 역할을 하고 있습니다.\n\n초콜릿 섭취는 반려견에게 매우 위험한 응급 상황일 수 있습니다. 지금 즉시 가까운 동물병원에 전화하시거나, 24시간 운영하는 동물병원으로 반려견을 데리고 가시는 것을 권장합니다. 섭취한 ",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [],
+          "ok": false,
+          "answer": "죄송합니다만, 저는 반려견의 행동이나 훈련, 생활 습관에 관한 상담을 돕고 있습니다. 초콜릿 섭취와 같은 응급 상황은 즉시 가까운 동물병원에 연락하시거나 24시간 동물병원 응급실로 방문하셔야 합니다. 초콜릿의 종류와 먹은 양, 반려견의 몸무게를 미리 확인해 두시면 진료에 도움이 됩니다.",
+          "composed": false,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "id": "skin-photo-only-emoji",
+      "want": [
+        "screen_skin_photo"
+      ],
+      "allow": [],
+      "passed": "2/2",
+      "errors": 1,
+      "runs": [
+        {
+          "tools": [
+            "screen_skin_photo"
+          ],
+          "ok": true,
+          "answer": "피부에 이상 소견이 보입니다. 이 사진만으로 정확하게 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "screen_skin_photo"
+          ],
+          "ok": true,
+          "answer": "피부에 이상 소견이 보입니다. 이 사진만으로 정확하게 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "screen_skin_photo"
+          ],
+          "ok": false,
           "error": "LLMError: HTTP 429 — [{\n  \"error\": {\n    \"code\": 429,\n    \"message\": \"You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/ra"
+        }
+      ]
+    },
+    {
+      "id": "photo-but-behavior-question",
+      "want": [
+        "ask_behavior_question"
+      ],
+      "allow": [
+        "screen_skin_photo"
+      ],
+      "passed": "3/3",
+      "errors": 0,
+      "runs": [
+        {
+          "tools": [
+            "ask_behavior_question",
+            "screen_skin_photo"
+          ],
+          "ok": true,
+          "answer": "보내주신 사진을 확인한 결과, 피부에 이상 소견이 보입니다. 이 사진만으로는 정확한 상태를 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n산책 시 줄을 당기는 행동에 대해서는 다음 방법을 참고해 보세요.\n\n산책 중에는 줄이 느슨할 때만 앞으로 가게 해주세요. [자료 1]\n\n이 결",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "ask_behavior_question",
+            "screen_skin_photo"
+          ],
+          "ok": true,
+          "answer": "보내주신 사진의 피부 상태를 확인한 결과, 이상 소견이 보입니다. 이 사진만으로는 정확한 상태를 알기 어려우니 수의사 진료를 받아보시기를 권합니다.\n\n산책 시 줄을 당기는 행동에 대해서는 다음 방법을 참고해 보세요.\n\n산책 중에는 줄이 느슨할 때만 앞으로 가게 해주세요. [자료 1]\n\n",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "ask_behavior_question",
+            "screen_skin_photo"
+          ],
+          "ok": true,
+          "answer": "보내주신 사진을 확인한 결과, 피부에 이상 소견이 보입니다. 이 사진만으로는 정확한 상태를 알기 어려우니 수의사 진료를 받아보시기를 권합니다.\n\n산책 시 줄을 당기는 행동에 대해서는 다음 방법을 참고해 보세요.\n\n산책 중에는 줄이 느슨할 때만 앞으로 가게 해주세요. [자료 1]\n\n이 결",
+          "composed": false,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "id": "human-medical",
+      "want": [
+        "ask_behavior_question"
+      ],
+      "allow": [],
+      "passed": "0/3",
+      "errors": 0,
+      "runs": [
+        {
+          "tools": [],
+          "ok": false,
+          "answer": "저는 반려견의 행동이나 훈련, 생활과 관련된 상담을 돕고 있습니다. 사람의 질병이 반려견에게 전염되는지에 대한 의학적인 정보는 제공해 드리기 어렵습니다. 이 부분은 동물병원에 문의하시거나 수의사의 진료를 받아보시는 것을 권장합니다.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [],
+          "ok": false,
+          "answer": "저는 반려견의 행동이나 훈련, 생활과 관련된 상담을 돕고 있습니다. 사람의 질병이 반려견에게 전염되는지에 대한 의학적인 정보는 제공해 드리기 어렵습니다. 이 부분은 동물병원에 문의하시거나 수의사의 진료를 받아보시는 것을 권장합니다.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [],
+          "ok": false,
+          "answer": "저는 반려견의 행동이나 훈련, 생활과 관련된 상담을 돕고 있습니다. 사람의 질병이 반려견에게 전염되는지 여부와 같은 의학적인 질문은 수의사와 상담하시는 것을 권장합니다.",
+          "composed": false,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "id": "thanks",
+      "want": [],
+      "allow": [],
+      "passed": "3/3",
+      "errors": 0,
+      "runs": [
+        {
+          "tools": [],
+          "ok": true,
+          "answer": "도움이 되었다니 다행입니다. 또 궁금한 점이 생기면 언제든 말씀해 주세요.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [],
+          "ok": true,
+          "answer": "도움이 되었다니 다행입니다. 또 궁금한 점이 생기면 언제든 말씀해 주세요.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [],
+          "ok": true,
+          "answer": "도움이 되었다니 다행입니다. 또 궁금한 점이 생기면 언제든 말씀해 주세요.",
+          "composed": false,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "id": "meta-question",
+      "want": [],
+      "allow": [],
+      "passed": "3/3",
+      "errors": 0,
+      "runs": [
+        {
+          "tools": [],
+          "ok": true,
+          "answer": "저는 반려견의 행동 문제나 훈련, 생활 습관에 대해 보호자님의 고민을 상담해 드리는 역할을 합니다.\n\n반려견과 함께 생활하며 궁금한 점이나 고민되는 행동이 있다면 무엇이든 편하게 말씀해 주세요. 제가 가진 자료를 바탕으로 도움을 드릴 수 있는지 확인해 보겠습니다. 다만, 반려견과 관련 ",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [],
+          "ok": true,
+          "answer": "저는 반려견의 행동, 훈련, 생활 습관과 관련된 보호자님의 고민을 상담해 드리는 역할을 합니다.\n\n반려견의 문제 행동이나 훈련 방법에 대해 궁금한 점이 있으시면 언제든 물어봐 주세요. 제가 가진 자료를 바탕으로 정확한 정보를 찾아 답변해 드리겠습니다. 또한, 인터넷에서 본 훈련 조언이 ",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [],
+          "ok": true,
+          "answer": "저는 반려견의 행동, 훈련, 생활 방식에 대해 보호자님의 고민을 상담해 드리는 역할을 합니다.\n\n반려견의 문제 행동이나 훈련 방법에 대해 궁금한 점을 말씀해 주시면, 신뢰할 수 있는 자료를 바탕으로 답변을 찾아드립니다. 또한, 인터넷에서 보신 훈련 조언이 올바른 정보인지 확인해 드릴 수",
+          "composed": false,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "id": "retake-hint",
+      "want": [
+        "screen_skin_photo"
+      ],
+      "allow": [],
+      "passed": "3/3",
+      "errors": 0,
+      "runs": [
+        {
+          "tools": [
+            "screen_skin_photo"
+          ],
+          "ok": true,
+          "answer": "피부에 이상 소견이 보입니다. 이 사진만으로 정확하게 알 수 없으니 수의사 진료를 받아보시기를 권합니다. 모양만 보면 피부 표면·색·두께 변화에 가깝습니다.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "screen_skin_photo"
+          ],
+          "ok": true,
+          "answer": "사진이 흔들려 정확한 확인은 어렵지만, 피부에 이상 소견이 보입니다. 이 사진만으로는 정확한 상태를 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "screen_skin_photo"
+          ],
+          "ok": true,
+          "answer": "사진이 흔들려 정확한 확인은 어렵지만, 피부에 이상 소견이 보입니다. 이 사진만으로는 정확한 상태를 알 수 없으니 수의사 진료를 받아보시기를 권합니다.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요.",
+          "composed": false,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "id": "skin-no-photo-3",
+      "want": [],
+      "allow": [
+        "ask_behavior_question"
+      ],
+      "passed": "0/3",
+      "errors": 0,
+      "runs": [
+        {
+          "tools": [
+            "ask_behavior_question"
+          ],
+          "ok": false,
+          "answer": "죄송합니다. 현재 제가 가진 자료에는 귀의 변색이나 냄새와 같은 건강 문제에 대한 정보가 포함되어 있지 않습니다. 이 부분은 동물병원에 방문하시어 수의사의 진료를 받아보시는 것을 권장합니다.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "ask_behavior_question"
+          ],
+          "ok": false,
+          "answer": "죄송합니다. 현재 제가 가진 자료로는 귀의 상태와 관련된 정보를 찾을 수 없습니다. 수의사와 상담하시는 것을 권장합니다.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "ask_behavior_question"
+          ],
+          "ok": false,
+          "answer": "죄송합니다. 현재 제가 가진 자료로는 귀의 상태와 관련된 정보를 찾을 수 없습니다. 수의사에게 진료를 받아보시는 것을 권장합니다.",
+          "composed": false,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "id": "separation-detail",
+      "want": [
+        "ask_behavior_question"
+      ],
+      "allow": [],
+      "passed": "3/3",
+      "errors": 0,
+      "runs": [
+        {
+          "tools": [
+            "ask_behavior_question"
+          ],
+          "ok": true,
+          "answer": "죄송합니다. 질문하신 분리불안이나 혼자 있을 때 짖는 행동에 대해서는 현재 제가 참고할 수 있는 자료에 구체적인 해결 방법이 나와 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "ask_behavior_question"
+          ],
+          "ok": true,
+          "answer": "죄송합니다. 질문하신 분리불안이나 혼자 있을 때 짖는 행동에 대해서는 현재 제가 참고할 수 있는 자료에 구체적인 해결 방법이 나와 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "ask_behavior_question"
+          ],
+          "ok": true,
+          "answer": "죄송합니다. 질문하신 분리불안이나 혼자 있을 때 짖는 행동에 대해서는 현재 제가 참고할 수 있는 자료에 구체적인 해결 방법이 나와 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
+          "composed": false,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "id": "dominance-mixed",
+      "want": [
+        "ask_behavior_question",
+        "factcheck_claim"
+      ],
+      "allow": [],
+      "passed": "3/3",
+      "errors": 0,
+      "runs": [
+        {
+          "tools": [
+            "ask_behavior_question",
+            "factcheck_claim"
+          ],
+          "ok": true,
+          "answer": "복종 훈련에 대해 말씀드리면, 흔히 말하는 '서열을 잡아야 한다'는 식의 지배 이론은 현대 행동학에서 권장하지 않는 방식입니다.\n\n앉아 가르치는 법에 대해서는 현재 보유한 자료에서 구체적인 방법을 찾을 수 없었습니다. 다른 궁금한 점이 있으시면 말씀해 주세요.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "ask_behavior_question",
+            "factcheck_claim"
+          ],
+          "ok": true,
+          "answer": "복종 훈련이라는 용어는 흔히 서열을 잡아야 한다는 의미로 사용되곤 하는데, 이는 현대 동물 행동학에서 권장하지 않는 방식입니다. 강압적인 서열 훈련은 반려견과의 신뢰 관계를 해칠 수 있습니다.\n\n앉아 가르치는 방법에 대해서는 현재 보유한 자료에서 구체적인 단계별 안내를 찾을 수 없었습니",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "ask_behavior_question",
+            "factcheck_claim"
+          ],
+          "ok": true,
+          "answer": "복종 훈련에 대해 말씀드리면, 흔히 말하는 서열을 잡아야 한다는 식의 복종 훈련은 현대 동물 행동학에서 권장하지 않는 방식입니다. 이는 과학적 근거가 부족하며 오히려 반려견과의 신뢰 관계를 해칠 수 있습니다.\n\n앉아 가르치는 방법에 대해서는 현재 제가 가진 자료에서 구체적인 방법을 찾을",
+          "composed": false,
+          "violations": []
+        }
+      ]
+    },
+    {
+      "id": "cost-and-behavior",
+      "want": [
+        "ask_behavior_question"
+      ],
+      "allow": [],
+      "passed": "3/3",
+      "errors": 0,
+      "runs": [
+        {
+          "tools": [
+            "ask_behavior_question"
+          ],
+          "ok": true,
+          "answer": "죄송합니다. 질문하신 중성화와 마운팅의 관계에 대해서는 현재 참고할 수 있는 자료에 관련 내용이 포함되어 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "ask_behavior_question"
+          ],
+          "ok": true,
+          "answer": "죄송합니다. 질문하신 중성화와 마운팅의 관계에 대해서는 현재 참고할 수 있는 자료에 관련 내용이 포함되어 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
+          "composed": false,
+          "violations": []
+        },
+        {
+          "tools": [
+            "ask_behavior_question"
+          ],
+          "ok": true,
+          "answer": "죄송합니다. 현재 가지고 있는 자료에는 중성화 수술과 마운팅 행동의 상관관계에 대한 구체적인 정보가 포함되어 있지 않습니다. 도움을 드리지 못해 죄송합니다.",
+          "composed": false,
+          "violations": []
         }
       ]
     }
