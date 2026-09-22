@@ -250,3 +250,14 @@ async def test_사진이_있으면_모델이_안_불러도_판정은_돈다(monk
     assert agents.seen == [{"image_path": "a.jpg", "guide_box": [0.1, 0.1, 0.5, 0.5]}]
     assert turn.trace.calls[0].name == "screen_skin_photo"
     assert ABNORMAL_JSON["disclaimer"] in turn.answer
+
+
+
+def test_조립은_피부_질문에_사진을_요청한다():
+    """조립한 답은 정의상 안전해야 한다 — G5 도 코드가 만족시킨다."""
+    from dogcare.gates import TurnFacts, check
+    from dogcare.loop import _compose
+
+    facts = TurnFacts(question="배가 빨갛고 딱지가 있어요 그냥 말해줘", rag_coverage="none")
+    answer = _compose([], facts)
+    assert "사진" in answer and check(answer, facts).ok

@@ -106,9 +106,12 @@
   expect_tools: [factcheck_claim]
   allow_tools: [ask_behavior_question]
 
+# ★ 응급 — 모델이 툴 없이 "지금 바로 병원" 이라고 답했다 (Gemini 3/3). 그게 맞는
+#   행동이다. 코퍼스는 행동 자료라 검색해도 나올 게 없고, 지체가 비용이다.
 - id: emergency-ish
   question: 초콜릿을 먹었어요 어떡하죠
-  expect_tools: [ask_behavior_question]
+  expect_tools: []
+  allow_tools: [ask_behavior_question]
 
 - id: skin-photo-only-emoji
   question: 😢
@@ -121,10 +124,11 @@
   expect_tools: [ask_behavior_question]
   allow_tools: [screen_skin_photo]
 
+# ★ 사람 질환 — 개 행동 코퍼스 밖. 범위 안내로 끝내도 되고 찾아봐도 된다 (non-dog-scope 와 같은 논리).
 - id: human-medical
   question: 제가 감기에 걸렸는데 강아지한테 옮나요
-  expect_tools: [ask_behavior_question]
-  allow_tools: []
+  expect_tools: []
+  allow_tools: [ask_behavior_question]
 
 - id: thanks
   question: 고마워요 도움이 됐어요

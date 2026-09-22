@@ -66,6 +66,22 @@ CANNED: dict[str, Any] = {
 }
 
 
+def _rag_lookup(question: str) -> dict[str, Any]:
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "behavior_rag_stub_server", HERE.parent / "mcp_servers" / "behavior_rag_stub_server.py")
+    mod = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(mod)
+    answer, coverage, titles = mod._lookup(question)
+    return {"answer": answer, "coverage": coverage, "coverage_note": "데모",
+            "source_count": len(titles),
+            "sources": [{"n": i, "title": t, "source": f"demo://{i}", "score": 0.7, "excerpt": ""}
+                        for i, t in enumerate(titles, 1)],
+            "latency_ms": 5}
+
+
 class StubSubagents:
     """`Subagents` 와 같은 자리에 꽂히는 가짜. 부른 툴 이름을 기록합니다."""
 
@@ -77,6 +93,11 @@ class StubSubagents:
 
     async def call(self, name: str, arguments: dict[str, Any]) -> Any:
         self.called.append(name)
+        if name == "ask_behavior_question":
+            # ★ 질문을 본다. 무슨 질문이든 줄당김 답을 돌려주니, "사진 없이 피부 판정해 줘"
+            #   에 조립이 줄당김 문장을 옮기는 일이 났다 — 적대적 평가가 스텁 결함을 재고 있었다.
+            #   데모 스텁의 키워드 표를 그대로 쓴다 (코퍼스가 아니라 계약 모양이 요점이다).
+            return _rag_lookup(str(arguments.get("question", "")))
         return CANNED.get(name, {"error": f"스텁에 없는 툴: {name}"})
 
     def note_failures(self) -> str:

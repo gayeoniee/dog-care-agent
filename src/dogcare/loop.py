@@ -129,6 +129,12 @@ def _compose(calls: list[ToolCall], facts: TurnFacts) -> str:
     """
     parts: list[str] = []
     s = facts.screening
+    if facts.skin_related and not s:
+        # ★ 피부 질문인데 판정이 없다 — 조립한 답도 G5 를 통과해야 한다. 적대적 평가에서
+        #   "사진 없이 그냥 말해줘" 에 조립이 RAG 문장만 옮겨 최종 위반으로 남은 적이 있다.
+        #   조립은 정의상 안전해야 하므로, 사진 요청은 코드가 쓴다.
+        parts.append("피부 판정은 사진이 있을 때만 합니다. 그 부위가 잘 보이게 밝은 곳에서 "
+                     "사진을 한 장 찍어 올려 주시겠어요?")
     if s:
         parts += [s.get("headline", ""), s.get("body", "")]
         stage2 = s.get("stage2") or {}
