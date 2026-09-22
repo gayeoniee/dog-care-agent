@@ -91,7 +91,11 @@ GitHub Pages 는 정적 파일만 서빙한다. 파이썬·토치·postgres 는 
 
 ## 남은 것 (2차 끝)
 
-- [ ] 적대적 20×3 Gemini 재측정 (쿼터) → `freeze` 로 기준선 갱신
+- [ ] 적대적 20×3 Gemini 재측정 (쿼터) → `freeze` 로 기준선 갱신.
+  **쿼터의 정체(2026-09-22 23:40 실측)**: `GenerateRequestsPerDayPerProjectPerModel-FreeTier` = **500회/일/모델**.
+  하루치를 다 썼다 — 재시도는 60턴 중 55 ERR. 리셋은 태평양 자정 = **한국 16:00**. 재측정(≤180회) + judge(≤60회)
+  + freeze 는 리셋 직후 한 번에 돌리면 들어간다. **Space 도 같은 키라 그때까지 429** — 데모용 키를 다른
+  Google Cloud 프로젝트에서 따로 만들면 평가가 데모 쿼터를 먹지 않는다 (Secret 만 바꾸면 됨)
 - [ ] Gemini 판정기로 적대적 트레이스 채점 (쿼터)
 - [x] 로컬 모델 최종 선택 — **qwen3:8b (8K 변형 `qwen3-8k`)**, 사용자 선택 2026-09-22. `.env.example` (B) 블록
 - [x] D2 HF Spaces 라이브 데모 — **https://huggingface.co/spaces/gayoniee/dog-care-agent** (2026-09-22, RUNNING · `/api/health` 200). 공개 전환과 함께. **Docker SDK 가 유료로
