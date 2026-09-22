@@ -57,5 +57,20 @@ class Trace:
     def save(self, directory: Path) -> Path:
         directory.mkdir(parents=True, exist_ok=True)
         p = directory / f"{time.strftime('%Y%m%d-%H%M%S')}-{self.run_id}.json"
-        p.write_text(json.dumps(asdict(self), ensure_ascii=False, indent=2), encoding="utf-8")
+        p.write_text(json.dumps(self.scrubbed(), ensure_ascii=False, indent=2), encoding="utf-8")
         return p
+
+    def scrubbed(self) -> dict[str, Any]:
+        """기록용 dict — **사진 경로는 파일 이름만.**
+
+        절대경로는 누가 어디서 돌렸는지 말해주는 정보고, 기록은 공개 뷰어에 올라갈 수
+        있다. 사이트 빌더가 지우던 걸 처음부터 안 남기게 했다.
+        """
+        d = asdict(self)
+        if d.get("image_path"):
+            d["image_path"] = Path(d["image_path"]).name
+        for c in d.get("calls") or []:
+            a = c.get("arguments") or {}
+            if isinstance(a, dict) and a.get("image_path"):
+                a["image_path"] = Path(str(a["image_path"])).name
+        return d

@@ -265,8 +265,47 @@ def g7_group_claim(answer: str, facts: TurnFacts) -> list[GateViolation]:
                           f"{', '.join(named)} — {why}")]
 
 
+# ──────────────────────────────────────────────────────────────
+# G8 — 판정의 긴급도를 낮추거나 올림
+# ──────────────────────────────────────────────────────────────
+#: 판정별로 답에 **있어야** 하는 것과 **없어야** 하는 것. 저쪽 팀 버전의 `plan_actions`
+#: 가 같은 자리다 — abnormal 이면 모델이 무엇을 골랐든 vet_visit 이 맨 앞이고, retake 는
+#: "판정 못 함" 이지 "괜찮음" 이 아니다. 놓친 이상이 과잉 권유보다 비싸다.
+_NORMAL_CLAIMS = ("이상 소견은 보이지 않", "이상은 없", "정상으로 보", "괜찮아 보", "문제없어 보")
+_ABNORMAL_CLAIMS = ("이상 소견이 보입", "이상 소견이 확인")
+
+
+def g8_verdict_fidelity(answer: str, facts: TurnFacts) -> list[GateViolation]:
+    """답이 판정과 **모순되는 긴급도**를 말하면 막습니다.
+
+    abnormal 인데 "이상 없어 보여요" — 이게 제일 비싼 실수다. 반대로 normal 인데
+    "이상 소견이 보입니다" 라고 하면 모델이 판정을 지어낸 것이다. retake 는 판정이
+    아니므로 어느 쪽도 말하면 안 된다.
+
+    "진료 권고가 있어야 한다" 와 "다시 찍어 달라고 해야 한다" 는 **여기서 안 본다** —
+    그건 모델에게 부탁할 일이 아니라 코드가 붙이는 일이다 (`loop._attach_contract`,
+    면책과 같은 논리). 저쪽 팀 버전의 `plan_actions` 도 막지 않고 **앞에 세운다.**
+    """
+    s = facts.screening
+    if not s:
+        return []
+    v = s.get("verdict")
+    # ★ 면책 문구를 떼고 봅니다. 면책에 "수의사의 진료를 대체하지 않습니다" 가 있어서
+    #   그대로 두면 진료 권고가 없는 답도 "진료" 가 있는 것으로 보입니다 — 실제로 그렇게
+    #   테스트가 통과해 버렸습니다. 면책은 코드가 붙인 것이지 모델의 권고가 아닙니다.
+    answer = answer.replace(DISCLAIMER, "")
+    out: list[GateViolation] = []
+    if v == "abnormal" and any(w in answer for w in _NORMAL_CLAIMS):
+        out.append(GateViolation("G8", "이상 판정을 정상처럼 말했습니다"))
+    elif v == "normal" and any(w in answer for w in _ABNORMAL_CLAIMS):
+        out.append(GateViolation("G8", "정상 판정을 이상처럼 말했습니다"))
+    elif v == "retake" and any(w in answer for w in _ABNORMAL_CLAIMS + _NORMAL_CLAIMS):
+        out.append(GateViolation("G8", "판정을 못 한 사진에 판정을 말했습니다"))
+    return out
+
+
 GATES = (g1_lesion_name, g2_disclaimer, g3_citations, g4_ensemble_arms,
-         g5_needs_photo, g6_unchecked_coverage, g7_group_claim)
+         g5_needs_photo, g6_unchecked_coverage, g7_group_claim, g8_verdict_fidelity)
 
 
 @dataclass

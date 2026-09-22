@@ -102,10 +102,23 @@ def _facts(question: str, image_path: str | None, calls: list[ToolCall],
 
 
 def _attach_disclaimer(text: str, facts: TurnFacts) -> str:
-    """면책은 **코드가 붙입니다.** 그래서 G2 가 원문 대조로 잴 수 있습니다."""
-    if not facts.screening or DISCLAIMER in text:
+    """면책과 **행동 권고**는 코드가 붙입니다. 그래서 G2 가 원문 대조로 잴 수 있습니다.
+
+    행동 권고(`action`)는 판정 계약의 문장 그대로입니다 — abnormal 이면 "수의사 진료를
+    받아보시기를 권합니다.", retake 면 "사진을 다시 찍어주세요.". 모델이 빼먹어도
+    붙습니다. 저쪽 팀 버전의 `plan_actions` 가 같은 자리다 — 막지 않고 앞에 세운다.
+    놓친 이상이 과잉 권유보다 비싸다.
+    """
+    s = facts.screening
+    if not s:
         return text
-    return f"{text.rstrip()}\n\n{DISCLAIMER}"
+    out = text.rstrip()
+    action = str(s.get("action") or "")
+    if s.get("verdict") in ("abnormal", "retake") and action and action not in out:
+        out = f"{out}\n\n{action}"
+    if DISCLAIMER not in out:
+        out = f"{out}\n\n{DISCLAIMER}"
+    return out
 
 
 def _compose(calls: list[ToolCall], facts: TurnFacts) -> str:

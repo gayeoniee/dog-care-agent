@@ -240,3 +240,31 @@ def test_g7_판정이_없는_턴은_건드리지_않는다():
     """계열 이름이 답에 있어도 판정이 없으면 G7 의 일이 아니다 (피부 질문이면 G5 가 본다)."""
     assert check("깊거나 단단한 혹 같은 건 사진이 있어야 봅니다. [자료 1]",
                  facts(question="산책 줄을 당겨요", rag_coverage="full", rag_source_count=1)).ok
+
+
+
+# ── G8. 판정의 긴급도를 바꾸지 않는다 ─────────────────────────
+def test_g8_이상인데_정상처럼_말하면_막힌다():
+    r = check(f"뚜렷한 이상 소견은 보이지 않습니다. {DISCLAIMER}",
+              facts(had_image=True, screening=_with_group("벗겨지거나 패인 상처")))
+    assert any(v.gate == "G8" for v in r.violations)
+
+
+def test_g8_정상인데_이상처럼_말하면_막힌다():
+    normal = {"verdict": "normal", "stage2": {"group": None}, "meta": {}}
+    r = check(f"피부에 이상 소견이 보입니다. {DISCLAIMER}", facts(had_image=True, screening=normal))
+    assert any(v.gate == "G8" for v in r.violations)
+
+
+def test_g8_재촬영은_판정을_말하면_안_되고_다시_찍으라_해야_한다():
+    retake = {"verdict": "retake", "stage2": {"group": None}, "meta": {}}
+    bad = check(f"이상 소견이 보입니다. {DISCLAIMER}", facts(had_image=True, screening=retake))
+    assert any(v.gate == "G8" for v in bad.violations)
+    ok = check(f"판단이 어려운 사진입니다. {DISCLAIMER}", facts(had_image=True, screening=retake))
+    assert ok.ok
+
+
+def test_g8_판정대로_말하면_통과한다():
+    assert check(f"피부에 이상 소견이 보입니다. 모양만 보면 벗겨지거나 패인 상처에 가깝습니다. "
+                 f"수의사 진료를 받아보시기를 권합니다. {DISCLAIMER}",
+                 facts(had_image=True, screening=_with_group("벗겨지거나 패인 상처"))).ok

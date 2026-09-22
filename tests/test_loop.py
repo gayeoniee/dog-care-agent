@@ -146,6 +146,28 @@ def test_잘못된_box는_거부한다(bad):
         _box(bad)
 
 
+# ── 행동 권고는 코드가 붙인다 ───────────────────────────────
+def test_이상_판정이면_진료_권고를_코드가_붙인다():
+    from dogcare.gates import TurnFacts
+    from dogcare.loop import _attach_disclaimer
+
+    facts = TurnFacts(had_image=True, screening={**ABNORMAL_JSON,
+                                                  "action": "수의사 진료를 받아보시기를 권합니다."})
+    out = _attach_disclaimer("피부에 이상 소견이 보입니다. 지켜보세요.", facts)
+    assert "수의사 진료를 받아보시기를 권합니다." in out
+    assert out.index("수의사 진료") < out.index("이 결과는 수의학적")   # 권고 → 면책 순서
+
+
+def test_재촬영이면_다시_찍으라는_말을_코드가_붙인다():
+    from dogcare.gates import TurnFacts
+    from dogcare.loop import _attach_disclaimer
+
+    facts = TurnFacts(had_image=True, screening={"verdict": "retake",
+                                                  "action": "사진을 다시 찍어주세요.",
+                                                  "stage2": {"group": None}, "meta": {}})
+    assert "사진을 다시 찍어주세요." in _attach_disclaimer("판단이 어렵습니다.", facts)
+
+
 # ── 앞 턴 판정을 다음 턴이 들고 간다 (B4) ─────────────────────
 def test_앞_턴_판정이_없으면_이어_묻기에서_게이트가_눈을_감는다():
     """이게 B4 를 만든 이유다 — 사진 없는 턴은 screening 이 None 이라 G1·G7 이 안 돈다."""
