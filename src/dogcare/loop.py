@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import json
 import time
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +34,11 @@ from dogcare.llm import ToolCallingLLM
 from dogcare.prompt import SYSTEM
 from dogcare.subagents import Subagents
 from dogcare.trace import ToolCall, Trace
+
+#: 진행 이벤트 — 웹 UI 가 "지금 뭘 하는 중" 을 보여주려고 받는다.
+#: (단계 이름, 부가 정보). 게이트 구조상 스트리밍은 안 되므로(다 받아야 검사한다)
+#: 단계 표시가 그 자리를 대신한다.
+OnEvent = Callable[[str, dict[str, Any]], None]
 
 #: 게이트가 걸렸을 때 모델에게 돌려주는 말. **무엇이 걸렸는지 그대로** 알려줍니다.
 _REPAIR = """방금 답은 내보낼 수 없습니다. 걸린 것:
@@ -123,7 +129,8 @@ def _compose(calls: list[ToolCall], facts: TurnFacts) -> str:
 
 
 async def _execute(tool_calls: list[dict[str, Any]], agents: Subagents, trace: Trace,
-                   messages: list[dict[str, Any]], pinned: dict[str, dict[str, Any]]) -> None:
+                   messages: list[dict[str, Any]], pinned: dict[str, dict[str, Any]],
+                   emit: OnEvent) -> None:
     """툴을 부르고 결과를 대화와 기록 양쪽에 남깁니다.
 
     `pinned` 는 **모델이 정하면 안 되는 인자**입니다. 사진 경로와 가이드 프레임은
@@ -136,6 +143,7 @@ async def _execute(tool_calls: list[dict[str, Any]], agents: Subagents, trace: T
         args = json.loads(fn.get("arguments") or "{}")
         args.update(pinned.get(fn["name"], {}))
         call = trace.add(ToolCall(name=fn["name"], arguments=args))
+        emit("tool", {"name": fn["name"]})
         t0 = time.perf_counter()
         try:
             call.result = await agents.call(fn["name"], args)
@@ -151,8 +159,10 @@ async def run_turn(question: str, image_path: str | None = None,
                    guide_box: list[float] | None = None,
                    history: list[dict[str, str]] | None = None,
                    settings: Settings | None = None,
-                   sub: Subagents | None = None) -> Turn:
+                   sub: Subagents | None = None,
+                   on_event: OnEvent | None = None) -> Turn:
     settings = settings or get_settings()
+    emit: OnEvent = on_event or (lambda kind, info: None)
     t0 = time.perf_counter()
     trace = Trace(question=question, image_path=image_path)
 
@@ -174,13 +184,14 @@ async def run_turn(question: str, image_path: str | None = None,
         draft = ""
         for _ in range(settings.max_tool_rounds):
             trace.rounds += 1
+            emit("llm", {"round": trace.rounds})
             msg = await llm.chat(messages, agents.tools)
             messages.append(msg)
             tool_calls = msg.get("tool_calls") or []
             if not tool_calls:
                 draft = msg.get("content") or ""
                 break
-            await _execute(tool_calls, agents, trace, messages, pinned)
+            await _execute(tool_calls, agents, trace, messages, pinned, emit)
         else:
             # 왕복 한도를 다 썼는데 모델이 답을 안 냈습니다. 더 돌리지 않습니다 —
             # 루프가 도는 걸 모르고 토큰을 태우는 게 제일 흔한 사고입니다.
@@ -188,9 +199,11 @@ async def run_turn(question: str, image_path: str | None = None,
 
         facts = _facts(question, image_path, trace.calls, settings)
         answer = _attach_disclaimer(draft, facts)
+        emit("gate", {"pass": 1})
         report = check(answer, facts)
 
         if not report.ok and draft:
+            emit("repair", {"violations": [str(v) for v in report.violations]})
             # ★ 한 번은 고쳐 쓸 기회를 줍니다. 무엇이 걸렸는지 그대로 알려줍니다.
             #   보통은 툴을 못 부르게 합니다 — 같은 사실 위에서 문장만 고르는 일입니다.
             #   G6 만 다릅니다. "찾아보지 않고 자료가 없다고 말했다" 는 말이 아니라
@@ -202,17 +215,19 @@ async def run_turn(question: str, image_path: str | None = None,
             msg = await llm.chat(messages, agents.tools if search else None)
             messages.append(msg)
             if search and (tool_calls := msg.get("tool_calls") or []):
-                await _execute(tool_calls, agents, trace, messages, pinned)
+                await _execute(tool_calls, agents, trace, messages, pinned, emit)
                 trace.rounds += 1
                 msg = await llm.chat(messages)
                 messages.append(msg)
                 # 툴을 더 불렀으니 **사실이 달라졌습니다.** 다시 모읍니다.
                 facts = _facts(question, image_path, trace.calls, settings)
             answer = _attach_disclaimer(msg.get("content") or "", facts)
+            emit("gate", {"pass": 2})
             report = check(answer, facts)
 
         composed = False
         if not report.ok or not answer.strip():
+            emit("compose", {"violations": [str(v) for v in report.violations]})
             answer = _compose(trace.calls, facts)
             composed = True
             # 조립한 답도 **똑같이 잽니다.** 안전하다고 믿고 안 재면, 조립 규칙이
@@ -223,6 +238,7 @@ async def run_turn(question: str, image_path: str | None = None,
         trace.violations = [str(v) for v in report.violations]
         trace.blocked = trace.blocked or not report.ok
         trace.elapsed_ms = round((time.perf_counter() - t0) * 1000, 1)
+        emit("done", {"blocked": trace.blocked, "composed": composed})
         return Turn(answer, trace, report, composed)
 
     if sub is not None:

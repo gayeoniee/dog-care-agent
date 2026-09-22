@@ -213,3 +213,30 @@ def test_g6_범위_안내는_막지_않는다():
     """
     answer = "죄송합니다. 고양이 모래에 대한 정보는 제공해 드리지 못합니다."
     assert check(answer, facts(question="고양이 모래는 어떤 게 좋아요")).ok
+
+
+# ── G7. 계열은 판정이 말한 그 하나만 ──────────────────────────
+def test_g7_group이_null인데_계열을_말하면_막힌다():
+    """★ 실기기에서 난 일입니다. 막대(groups)만 보고 1등 계열을 단정했습니다."""
+    s = {**ABNORMAL, "stage2": {"group": None,
+                                  "groups": [{"name": "피부 표면·색·두께 변화", "percent": 38.0}]}}
+    r = check(f"피부 표면·색·두께 변화 계열로 확인됩니다. {DISCLAIMER}",
+              facts(had_image=True, screening=s))
+    assert not r.ok and any(v.gate == "G7" for v in r.violations)
+
+
+def test_g7_판정과_다른_계열을_말하면_막힌다():
+    r = check(f"모양만 보면 깊거나 단단한 혹에 가깝습니다. {DISCLAIMER}",
+              facts(had_image=True, screening=_with_group("벗겨지거나 패인 상처")))
+    assert not r.ok and any(v.gate == "G7" for v in r.violations)
+
+
+def test_g7_판정이_말한_계열은_통과한다():
+    assert check(f"모양만 보면 벗겨지거나 패인 상처에 가깝습니다. {DISCLAIMER}",
+                 facts(had_image=True, screening=_with_group("벗겨지거나 패인 상처"))).ok
+
+
+def test_g7_판정이_없는_턴은_건드리지_않는다():
+    """계열 이름이 답에 있어도 판정이 없으면 G7 의 일이 아니다 (피부 질문이면 G5 가 본다)."""
+    assert check("깊거나 단단한 혹 같은 건 사진이 있어야 봅니다. [자료 1]",
+                 facts(question="산책 줄을 당겨요", rag_coverage="full", rag_source_count=1)).ok

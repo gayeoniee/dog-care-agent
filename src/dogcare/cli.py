@@ -87,6 +87,14 @@ async def _health(args: argparse.Namespace) -> int:
     return 0
 
 
+def _serve(args: argparse.Namespace) -> int:
+    from dogcare.server import serve
+
+    print(f"http://{args.host}:{args.port}  (Ctrl+C 로 종료)")
+    serve(host=args.host, port=args.port, demo=args.demo)
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(prog="dogcare", description=__doc__.split("\n")[0])
     ap.add_argument("--demo", action="store_true",
@@ -105,7 +113,14 @@ def main() -> int:
     h = sub.add_parser("health", help="서브에이전트가 붙었나")
     h.set_defaults(fn=_health)
 
+    s = sub.add_parser("serve", help="웹 UI 를 띄웁니다")
+    s.add_argument("--host", default="127.0.0.1")
+    s.add_argument("--port", type=int, default=8765)
+    s.set_defaults(fn=_serve)
+
     args = ap.parse_args()
+    if args.cmd == "serve":
+        return args.fn(args)
     return asyncio.run(args.fn(args))
 
 

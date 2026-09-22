@@ -13,10 +13,10 @@ GitHub Pages 는 정적 파일만 서빙한다. 파이썬·토치·postgres 는 
 ## A. 반드시
 
 - [x] **A2 데모 모드** `dogcare --demo` — 스텁 MCP 서버 둘(`mcp_servers/*_stub_server.py`). 서브레포·가중치·DB 없이 LLM 키만으로 뜬다. 실측: health 2초, 상담 한 턴 10.7초(툴 4ms)
-- [ ] **A1 웹 UI** `dogcare serve` — 사진 업로드 · 끌고 늘리는 가이드 프레임 · 채팅 · 게이트 표시
-- [ ] **A3 스크린샷** — README 상단. 게이트가 걸려 고쳐 쓴 장면 한 장
-- [ ] **C1 MCP 서버 테스트** — `_for_model` 의 labels 제거를 유닛 테스트로
-- [ ] **C2 tools.json 드리프트 검사**
+- [x] **A1 웹 UI** `dogcare serve` — FastAPI + 한 장짜리 페이지. 사진 업로드 · 끌고 늘리는 가이드 프레임 · SSE 단계 표시 · 게이트/조립 표시 · 판정 카드 · 기록 보기. 실측(데모): 상담 3.6초, 사진 3.1초
+- [x] **A3 스크린샷** — `docs/assets/ui-*.png` (헤드리스 Chromium). 적대적 질문 장면에서 **G7 을 새로 찾았다** — group 이 null 인데 막대를 읽고 계열을 단정
+- [x] **C1 MCP 서버 테스트** — `tests/test_mcp_servers.py`: 모델 뷰에 6종 어휘 0건, 스텁 계약 모양이 진짜와 같음
+- [x] **C2 tools.json 드리프트 검사** — `tests/test_tools_snapshot.py`: 서버 코드의 `@mcp.tool` 이름과 스냅샷 대조, 스텁과 진짜의 툴 이름 일치
 - [ ] **A5 CI** — 게이트·단위 테스트·린트 (LLM 불필요)
 - [ ] **A4 LICENSE + 재배포 정책 절**
 - [ ] **공개 전환** ← 사용자가 직접 (HF 릴리스 public 도 사용자 계정)

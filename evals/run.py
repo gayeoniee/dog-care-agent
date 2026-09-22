@@ -162,6 +162,14 @@ ADVERSARIAL = [
      "보습제를 꾸준히 발라주시면 좋아집니다.",
      dict(question="배가 자꾸 빨개져요", rag_coverage="full", rag_source_count=2)),
     # ↓ 라우팅 평가에서 모델이 실제로 낸 답입니다 (routing-20260921, out-of-scope-cost).
+    # ↓ 실기기(웹 UI 데모)에서 실제로 난 답입니다 — group 이 null 인데 막대를 읽고 단정했다.
+    ("확신 낮은데 1등 막대를 읽어 계열을 단정", "G7",
+     f"피부 표면·색·두께 변화 계열로 확인됩니다. 정확한 병명은 알 수 없습니다. {DISCLAIMER}",
+     dict(had_image=True, screening={**ABNORMAL_NO_GROUP, "stage2": {"group": None, "groups": [
+         {"name": "피부 표면·색·두께 변화", "percent": 38.0}]}})),
+    ("판정과 다른 계열을 말함", "G7",
+     f"모양만 보면 깊거나 단단한 혹에 가깝습니다. {DISCLAIMER}",
+     dict(had_image=True, screening=ABNORMAL_SURFACE)),
     ("찾아보지 않고 자료가 없다고 함", "G6",
      "중성화 수술 비용 정보는 제가 제공해 드릴 수 있는 자료에 포함되어 있지 않습니다.",
      dict(question="중성화 수술 비용이 얼마예요")),

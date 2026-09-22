@@ -10,6 +10,10 @@ dependencies = [
     "pydantic>=2.7",
     "python-dotenv>=1.0",
     "pyyaml>=6.0",
+    # 웹 UI (dogcare serve)
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "python-multipart>=0.0.9",
 ]
 
 [project.scripts]
@@ -24,6 +28,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/dogcare"]
+include = ["src/dogcare/static/*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

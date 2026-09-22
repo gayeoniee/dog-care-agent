@@ -35,7 +35,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from dogcare.vocab import LESION_TERMS, group_name, terms_allowed_by
+from dogcare.vocab import GROUPS, LESION_TERMS, group_name, terms_allowed_by
 
 #: 피부 모델이 붙이는 면책. **모델이 쓰는 문장이 아니라 코드가 붙이는 문장입니다.**
 #: 그래서 원문 대조가 성립합니다 — 모델이 바꿔 쓸 수 있는 것이면 못 잽니다.
@@ -238,8 +238,35 @@ def g6_unchecked_coverage(answer: str, facts: TurnFacts) -> list[GateViolation]:
                           f"{hits[0]!r} — ask_behavior_question 을 부른 적이 없습니다")]
 
 
+# ──────────────────────────────────────────────────────────────
+# G7 — 판정이 말하지 않은 계열을 말함
+# ──────────────────────────────────────────────────────────────
+def g7_group_claim(answer: str, facts: TurnFacts) -> list[GateViolation]:
+    """계열은 **판정이 내놓은 그 하나**만 말할 수 있습니다.
+
+    계열 이름은 6종이 아니라 말해도 되는 말입니다 — 단, 저쪽 규칙은 **확신
+    없으면 말하지 않는다** 입니다. `stage2.group` 이 null 이면 계열 막대(`groups`)
+    는 있어도 주장은 없습니다. 그런데 모델은 막대를 읽고 1등을 단정합니다.
+    실제로 그랬습니다 — 적대적 질문에 group 이 null 인데 "피부 표면·색·두께
+    변화 계열로 확인됩니다" 라고 썼습니다. G1 은 6종만 보므로 못 잡았습니다.
+
+    group 이 있을 때 **다른** 계열을 말하는 것도 막습니다. 판정이 고른 것과
+    다른 것을 말하면 그건 모델의 추측입니다.
+    """
+    if not facts.screening:
+        return []
+    allowed = group_name((facts.screening.get("stage2") or {}).get("group"))
+    named = [g for g in GROUPS if g in answer and g != allowed]
+    if not named:
+        return []
+    why = ("판정이 계열을 말하지 않았습니다(확신 낮음)" if allowed is None
+           else f"판정은 {allowed!r} 입니다")
+    return [GateViolation("G7", "판정이 말하지 않은 계열을 말했습니다",
+                          f"{', '.join(named)} — {why}")]
+
+
 GATES = (g1_lesion_name, g2_disclaimer, g3_citations, g4_ensemble_arms,
-         g5_needs_photo, g6_unchecked_coverage)
+         g5_needs_photo, g6_unchecked_coverage, g7_group_claim)
 
 
 @dataclass

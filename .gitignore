@@ -21,3 +21,6 @@ evals/out/
 .vscode/
 .idea/
 .DS_Store
+
+# 웹 UI 업로드 사진 — 보호자 사진이다
+uploads/

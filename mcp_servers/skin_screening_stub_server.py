@@ -32,7 +32,7 @@ _NOTE = ("6종 병변 이름은 의도적으로 빠져 있습니다. 이름을 �
 _GROUPS = ("솟아오른 변화", "피부 표면·색·두께 변화", "벗겨지거나 패인 상처", "깊거나 단단한 혹")
 _FEATURE = {
     "솟아오른 변화": "작게 솟은 돌기, 고름이 찬 돌기",
-    "피부 표면·색·두께 변화": "비듬, 딱지, 두꺼워지거나 검게 변한 피부",
+    "피부 표면·색·두께 변화": "하얀 가루, 딱지, 두꺼워지거나 검게 변한 피부",
     "벗겨지거나 패인 상처": "까짐, 진물, 출혈, 깊게 패인 부위",
     "깊거나 단단한 혹": "만져지는 덩어리",
 }
@@ -55,7 +55,12 @@ def _contract(verdict: str, abnormal: float, group: str | None, arms: int) -> di
     g_obj = None
     if verdict == "abnormal":
         base = {g: 0.05 for g in _GROUPS}
-        base[group or _GROUPS[1]] = 0.85
+        if group:
+            base[group] = 0.85
+        else:
+            # 확신이 낮은 갈래 — 분포도 평평해야 앞뒤가 맞는다. 85% 막대 옆에
+            # "계열 없음" 이 붙으면 모델이 막대를 읽고 단정한다 (실제로 그랬다).
+            base = dict(zip(_GROUPS, (0.38, 0.30, 0.20, 0.12), strict=True))
         tot = sum(base.values())
         groups = [{"name": g, "prob": round(p / tot, 4), "percent": round(p / tot * 100, 1)}
                   for g, p in sorted(base.items(), key=lambda kv: -kv[1])]
