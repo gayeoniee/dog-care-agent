@@ -35,6 +35,9 @@ class Settings:
     skin_release_dir: str = os.environ.get("SKIN_RELEASE_DIR", "")
     skin_expected_arms: int = int(os.environ.get("SKIN_EXPECTED_ARMS", "3") or 0)
     skin_mock: bool = os.environ.get("SKIN_MOCK", "0") == "1"
+    #: 데모 모드 — 서브레포·가중치·DB 없이 **스텁 MCP 서버 둘**로 뜬다. LLM 키만 필요.
+    #: 남이 클론해서 3분 안에 화면을 보게 하려고 있다. 응답에 `_demo: true` 가 박힌다.
+    demo: bool = os.environ.get("DOGCARE_DEMO", "0") == "1"
 
     llm_base_url: str = os.environ.get("LLM_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai")
     llm_model: str = os.environ.get("LLM_MODEL", "gemini-3.6-flash")
@@ -49,6 +52,11 @@ class Settings:
     max_tool_rounds: int = int(os.environ.get("MAX_TOOL_ROUNDS", "6"))
 
     trace_dir: Path = field(default_factory=lambda: _p("TRACE_DIR", "traces"))
+
+    def with_demo(self, on: bool) -> Settings:
+        """CLI `--demo` 가 부른다. 스텁은 팔 셋을 흉내 내므로 mock(1팔) 과 다르다."""
+        import dataclasses
+        return dataclasses.replace(self, demo=on) if on else self
 
     def env_for_skin(self) -> dict[str, str]:
         """피부 MCP 서버 프로세스에 넘길 환경. **HF 토큰도 여기로 갑니다.**"""

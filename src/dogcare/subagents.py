@@ -28,7 +28,19 @@ from dogcare.config import ROOT, Settings
 
 
 def _spec(settings: Settings) -> list[dict[str, Any]]:
-    """띄울 서버 둘. `--with mcp` 로 **저쪽 레포를 건드리지 않고** 의존성만 얹습니다."""
+    """띄울 서버 둘. `--with mcp` 로 **저쪽 레포를 건드리지 않고** 의존성만 얹습니다.
+
+    데모 모드면 **이 저장소의 venv 로 스텁 둘**을 띄웁니다. 서브레포도 가중치도
+    DB 도 필요 없습니다 — 계약 모양만 같은 가짜라, 오케스트레이터와 게이트는
+    진짜와 똑같이 돕니다. 답 내용만 몇 문장짜리 고정값입니다.
+    """
+    if settings.demo:
+        return [
+            {"key": "behavior_rag", "project": ROOT, "extras": [],
+             "script": ROOT / "mcp_servers" / "behavior_rag_stub_server.py", "env": {}},
+            {"key": "skin", "project": ROOT, "extras": [],
+             "script": ROOT / "mcp_servers" / "skin_screening_stub_server.py", "env": {}},
+        ]
     return [
         {
             "key": "behavior_rag",

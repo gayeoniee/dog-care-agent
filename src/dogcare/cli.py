@@ -52,7 +52,7 @@ def _box(raw: str | None) -> list[float] | None:
 
 
 async def _ask(args: argparse.Namespace) -> int:
-    settings = get_settings()
+    settings = get_settings().with_demo(args.demo)
     turn = await run_turn(args.question, image_path=args.image,
                           guide_box=_box(args.box), settings=settings)
 
@@ -73,8 +73,8 @@ async def _ask(args: argparse.Namespace) -> int:
     return 1 if turn.trace.blocked else 0
 
 
-async def _health(_: argparse.Namespace) -> int:
-    settings = get_settings()
+async def _health(args: argparse.Namespace) -> int:
+    settings = get_settings().with_demo(args.demo)
     async with Subagents(settings) as agents:
         if note := agents.note_failures():
             print(note)
@@ -89,6 +89,8 @@ async def _health(_: argparse.Namespace) -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser(prog="dogcare", description=__doc__.split("\n")[0])
+    ap.add_argument("--demo", action="store_true",
+                    help="스텁 서브에이전트로 뜬다. 서브레포·가중치·DB 불필요 (LLM 키만)")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     a = sub.add_parser("ask", help="한 번 물어봅니다")
