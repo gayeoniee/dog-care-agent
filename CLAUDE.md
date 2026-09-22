@@ -123,6 +123,33 @@ torch 버전 하나 때문에 상담이 안 뜨는 날이 온다. stdio 는 **�
   `inputSchema` → `input_schema`, `isError` → `is_error` 로 스네이크케이스가 됐다.
   1.x 도 받게 양쪽을 본다.
 
+- **낡은 워크트리를 읽고 남의 저장소를 잘못 적었다.** 첫 커밋의 README 와 커밋
+  메시지가 *"DAENGS 는 피부를 handoff 로 빼서 오케스트레이션에 안 넣었다"* 고
+  썼는데, 그건 로컬 워크트리의 옛 스냅샷이었다. `origin/dev` 에는 이미
+  `SkinPayload` · `ScreeningContext` · `resolve_skin_route`(D-079·D-081) 와
+  **`adapters/skin.py:speaks_beyond_screening()`** 이 있다 — 해설이 병변 이름이나
+  확률을 말하면 문장을 고정 문구로 바꾼다. 같은 발상을 저쪽이 먼저 했다.
+
+  **남의 저장소를 근거로 쓸 때는 `git fetch` 뒤 `origin/<기본브랜치>` 를 본다.**
+  워크트리는 언제 떠 온 것인지 알 수 없다. 포트폴리오 문서에서 남의 설계를
+  깎아내리는 문장은 틀리면 그냥 손해다.
+
+## 팀 저장소와의 관계
+
+같은 피부 모델이 [SAJOYO/DAENGS_dev](https://github.com/SAJOYO/DAENGS_dev) 에도
+들어가 있고, 거기도 프롬프트가 아니라 코드로 막는다. **막는 자리가 다르다.**
+
+| | DAENGS | 여기 |
+| --- | --- | --- |
+| 모델이 보는 판정 | `verdict` + `days_ago` 둘뿐 | verdict + 계열 + 확률 |
+| 이름 방어 | 계약에 칸이 없음 + 문장 교체 | `_for_model` 제거 + G1 차단 |
+| 사진 | 앱이 찍고 `/screen` 직접 호출 | 오케스트레이터가 MCP 툴로 호출 |
+
+**저쪽이 더 엄격하다.** 칸을 없애는 게 게이트보다 강하다 — 저쪽 주석 그대로
+*"a field here would demote it to a prompt instruction."* 여기는 개선판이 아니라
+**다른 트레이드오프**다. 더 주고 게이트로 갚는 대신 사진과 검색을 한 턴에 합친다.
+문서에 그렇게 적는다. 우열로 적지 않는다.
+
 ## 가중치와 코퍼스는 어디 있나
 
 - **피부 가중치**: 레포에 없다(`best.pt` 가 100MB 리밋을 넘는다).
