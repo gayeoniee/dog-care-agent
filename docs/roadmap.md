@@ -76,7 +76,7 @@ GitHub Pages 는 정적 파일만 서빙한다. 파이썬·토치·postgres 는 
 
 - [x] **D1 Dockerfile** — 데모 모드 기본, HF Spaces 용. CI 의 docker 잡이 빌드·기동 확인
 - [ ] **D2 HF Spaces 라이브 데모** ← 사용자 HF 계정에 Space 를 만드는 일이라 확인 뒤
-- [x] **D3 Ollama** — 설치. 후보 4종 프로브: command-r7b 툴 0/2 ✗ · qwen3.5:9b 사진 턴 ✗ · **qwen3:8b 3/3** · **granite4.1:8b 3/3 (5배 빠름)**. 라우팅 30문항 실측은 아래
+- [x] **D3 Ollama** — 설치. 후보 4종 프로브: command-r7b 툴 0/2 ✗ · qwen3.5:9b 사진 턴 ✗ · **qwen3:8b 3/3** · **granite4.1:8b 3/3 (5배 빠름)**. 라우팅 30문항(각 1회): granite 18·16·17, **qwen3 23·22·21**. 로컬은 툴 하나짜리엔 충분, 사진+상담 한 턴은 약함. **최종 선택은 사용자와** — 숫자상 qwen3:8b(8K 변형)
 - [x] **D4 데모 GIF** — `docs/assets/demo.gif` 39프레임
 - [x] **D5 빠른 실패** — LLM 키 없으면 MCP 서버 띄우기 전에
 - [x] **D6 `/api/stats`** + 헤더 칩

@@ -192,10 +192,14 @@ async def run_turn(question: str, image_path: str | None = None,
         user = question
         if image_path:
             pinned["screen_skin_photo"] = {"image_path": image_path}
-            note = "[사진이 있습니다. screen_skin_photo 를 부르세요"
+            # ★ 판정은 코드가 이미 불렀다(아래 forced). 이 안내는 그 다음 일을 말한다 —
+            #   로컬 7B 는 판정 결과가 대화에 있으면 "끝났다" 고 보고 상담 툴을 안 불렀다
+            #   (qwen3 실측: 사진+질문 4문항 전부 판정만 하고 멈춤).
+            note = ("[사진이 있습니다. 피부 판정은 이미 되어 있습니다(바로 위 툴 결과). "
+                    "질문에 행동·훈련 상담이나 조언 검증이 섞여 있으면 **그 툴도 부르세요** — "
+                    "판정만 전하고 끝내지 마세요")
             if guide_box:
                 pinned["screen_skin_photo"]["guide_box"] = guide_box
-                note += " — 가이드 프레임도 함께 주어졌습니다"
             user = f"{question}\n\n{note}. 경로와 프레임은 코드가 채웁니다.]"
         elif prior_screening:
             # 사진은 없지만 앞 턴에 판정이 있다. 모델에게는 **판정이 말한 것만** 준다 —
@@ -217,13 +221,28 @@ async def run_turn(question: str, image_path: str | None = None,
         #   부르는 실수를 프롬프트로 막는 대신 불가능하게 합니다.
         #   로컬 7B 모델 실측(granite4.1 16/30 · 18/30)에서 두 실수가 가장 흔했습니다.
         #   팀 버전(DAENGS)의 planner 가 같은 자리다 — 결정론적 신호를 LLM 앞에서 소비한다.
-        tools = [x for x in agents.tools
-                 if image_path or x["function"]["name"] != "screen_skin_photo"]
+        #   ⚠️ 판정 결과는 **사용자 메시지 본문**에 넣습니다. 가짜 assistant tool_call 을
+        #   대화에 끼워 넣었더니 Gemini 가 400 을 냈습니다 ("Function call is missing a
+        #   thought_signature") — 모델이 안 만든 호출을 만든 척하면 안 되는 공급자가 있다.
+        #   로컬 모델은 받았지만, 공급자마다 다른 길은 길이 아니다.
+        #   그래서 screen_skin_photo 는 모델의 툴 목록에서 **항상** 뺍니다. 사진이 있으면
+        #   코드가 이미 불렀고, 없으면 부를 수 없어야 합니다.
+        tools = [x for x in agents.tools if x["function"]["name"] != "screen_skin_photo"]
         if image_path and "screen_skin_photo" in agents.owner:
-            forced = [{"id": "skin-0", "type": "function",
-                       "function": {"name": "screen_skin_photo", "arguments": "{}"}}]
-            messages.append({"role": "assistant", "content": None, "tool_calls": forced})
-            await _execute(forced, agents, trace, messages, pinned, emit)
+            call = trace.add(ToolCall(name="screen_skin_photo",
+                                      arguments=dict(pinned["screen_skin_photo"])))
+            emit("tool", {"name": "screen_skin_photo"})
+            c0 = time.perf_counter()
+            try:
+                call.result = await agents.call("screen_skin_photo", call.arguments)
+            except Exception as exc:
+                call.error = f"{type(exc).__name__}: {exc}"
+                call.result = {"error": call.error}
+            call.elapsed_ms = round((time.perf_counter() - c0) * 1000, 1)
+            messages[-1]["content"] += (
+                "\n\n[피부 판정 결과 — 코드가 이미 screen_skin_photo 를 불렀습니다. "
+                "다시 부를 수 없습니다]\n"
+                + json.dumps(call.result, ensure_ascii=False))
 
         draft = ""
         for _ in range(settings.max_tool_rounds):
