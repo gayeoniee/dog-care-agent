@@ -19,7 +19,7 @@ GitHub Pages 는 정적 파일만 서빙한다. 파이썬·토치·postgres 는 
 - [x] **C2 tools.json 드리프트 검사** — `tests/test_tools_snapshot.py`: 서버 코드의 `@mcp.tool` 이름과 스냅샷 대조, 스텁과 진짜의 툴 이름 일치
 - [x] **A5 CI** — `.github/workflows/ci.yml`: ruff · pytest · 게이트 평가. ubuntu + windows 매트릭스
 - [x] **A4 LICENSE + 재배포 정책 절** — MIT(코드만). 가중치·코퍼스·스크린샷 사진의 조건을 LICENSE 와 README 에 적음
-- [ ] **공개 전환** ← 사용자가 직접. 순서:
+- [x] **공개 전환** — 사용자, 2026-09-22. 순서였던 것:
   1. `gh repo edit gayeoniee/dog-care-agent --visibility public --accept-visibility-change-consequences`
   2. Settings → Pages → Source: **GitHub Actions** (private 레포는 Pages 가 유료라 공개 뒤에 켠다)
   3. `gh workflow run pages.yml` — `site/` 가 https://gayeoniee.github.io/dog-care-agent/ 로
@@ -75,7 +75,7 @@ GitHub Pages 는 정적 파일만 서빙한다. 파이썬·토치·postgres 는 
 ## D. 서비스
 
 - [x] **D1 Dockerfile** — 데모 모드 기본, HF Spaces 용. CI 의 docker 잡이 빌드·기동 확인
-- [ ] **D2 HF Spaces 라이브 데모** ← 사용자 HF 계정에 Space 를 만드는 일이라 확인 뒤
+- [x] **D2 HF Spaces 라이브 데모** — https://huggingface.co/spaces/gayoniee/dog-care-agent (세부는 아래 '남은 것')
 - [x] **D3 Ollama** — 설치. 후보 4종 프로브: command-r7b 툴 0/2 ✗ · qwen3.5:9b 사진 턴 ✗ · **qwen3:8b 3/3** · **granite4.1:8b 3/3 (5배 빠름)**. 라우팅 30문항(각 1회): granite 18·16·17, **qwen3 23·22·21**. 로컬은 툴 하나짜리엔 충분, 사진+상담 한 턴은 약함. **최종 선택은 사용자와** — 숫자상 qwen3:8b(8K 변형)
 - [x] **D4 데모 GIF** — `docs/assets/demo.gif` 39프레임
 - [x] **D5 빠른 실패** — LLM 키 없으면 MCP 서버 띄우기 전에
@@ -100,7 +100,7 @@ GitHub Pages 는 정적 파일만 서빙한다. 파이썬·토치·postgres 는 
   1. HF 토큰에 **쓰기 권한** — fine-grained 면 "Write access to contents/settings of all repos
      under your personal namespace". 지금 토큰(`DAENGS_APP`)은 릴리스 모델 읽기뿐이라 403
   2. `uv run tools/push_space.py` — Space 생성 · Secret `LLM_API_KEY` · Variables · 업로드까지 한 번에.
-     `space/app.py` + `space/README.md`(YAML 머리말) + `src/` + 스텁 둘 + `uv export` 한 requirements.txt 만 올린다
+     `space/app.py` + `space/README.md`(YAML 머리말) + `src/` + 스텁 둘 + 직접 의존성 requirements.txt 만 올린다
   3. 뜨면 README 상단에 Space 링크 — 달았다
   - 걸렸던 것 셋: ① 무료 CPU Basic 도 PRO 전용(402) → 무료는 **ZeroGPU** 뿐이라 `zero-a10g` 로 만든다.
     ② 런타임이 `gradio[mcp]` 를 같이 깔아 `mcp<2` 를 요구 → lock 대신 직접 의존성만, Space 에서만 `mcp>=1.21,<2`
