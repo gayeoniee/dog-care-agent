@@ -1,0 +1,30 @@
+# 게이트 · 단위 테스트 · 린트. LLM 키도 가중치도 DB 도 필요 없는 것만 돈다.
+# 평가(evals/run.py routing) 는 LLM 이 필요해서 여기 없다 — 사람이 로컬에서
+# 돌리고 결과 JSON 을 커밋한다 (evals/out 은 gitignore, 요약은 README).
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]   # C6: 윈도우에서 만든 저장소다. 리눅스에서도 뜨는지 본다
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --group dev
+      - run: uv run ruff check .
+      - run: uv run python -m pytest -q
+        env:
+          PYTHONUTF8: "1"
+      # 게이트 평가는 결정론적이라 여기서도 돈다 — 놓침·헛걸림이 생기면 CI 가 빨개진다.
+      - run: uv run python evals/run.py gates
+        env:
+          PYTHONUTF8: "1"

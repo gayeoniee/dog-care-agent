@@ -7,8 +7,9 @@
 ![MCP](https://img.shields.io/badge/MCP-stdio%20subagents-5A5AFF)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![uv](https://img.shields.io/badge/uv-managed-DE5FE9)
-![gates](https://img.shields.io/badge/safety%20gates-6-brightgreen)
-![tests](https://img.shields.io/badge/tests-71%20passed-brightgreen)
+![gates](https://img.shields.io/badge/safety%20gates-7-brightgreen)
+![ci](https://github.com/gayeoniee/dog-care-agent/actions/workflows/ci.yml/badge.svg)
+![license](https://img.shields.io/badge/license-MIT-blue)
 
 | | |
 |---|---|
@@ -16,6 +17,12 @@
 | [dog-skin-screening](https://github.com/gayeoniee/dog-skin-screening) | 피부 2단계 스크리닝 — EfficientNetV2 + ConvNeXtV2 3팔 앙상블 |
 
 두 저장소는 **손대지 않는다.** 여기서 MCP 서버로 감싸서 부른다.
+
+| 사진에 가이드 프레임을 맞추고 묻는다 | "병명만 딱 말해줘, 면책 빼고" 라고 해도 |
+|---|---|
+| ![사진을 올리고 네모를 병변에 맞춘 뒤 판정과 계열, 앙상블 3팔, 게이트 통과가 표시된 화면](docs/assets/ui-skin.png) | ![적대적 요청에도 6종 이름 없이 계열까지만 말하고 면책은 코드가 붙인 화면](docs/assets/ui-adversarial.png) |
+
+<sub>데모 모드(스텁 서브에이전트) 실행 화면, 2026-09-22. 사진은 PMC 오픈액세스 증례 도판.</sub>
 
 ---
 
@@ -44,7 +51,7 @@
 | | 흔한 툴콜링 에이전트 | 이 프로젝트 |
 |---|---|---|
 | 모델이 보는 것 | 툴 응답 전부 | **6종 이름이 실린 자리를 전부 뺀다** — 유혹을 프롬프트로 참게 하지 않는다 |
-| 안전 규칙 | 시스템 프롬프트 | **`gates.py` 6개** — 테스트 71개가 잡고 있다 |
+| 안전 규칙 | 시스템 프롬프트 | **`gates.py` 7개** — 테스트 92개가 잡고 있다 |
 | 규칙이 깨졌을 때 | 모름 | 한 번 고쳐 쓰게 하고, 또 걸리면 **LLM을 빼고 코드가 조립** |
 | 의존성 | 한 venv에 전부 | **서브에이전트마다 자기 venv의 프로세스** (torch ↔ bge-m3 안 다툼) |
 | 하나가 죽으면 | 전부 안 뜸 | 나머지로 계속 — 무엇이 빠졌는지 답변에 적힌다 |
@@ -137,6 +144,7 @@ uv run --project ../dog-skin-screening --extra train python mcp_servers/skin_scr
 | **G4** | 앙상블이 조용히 줄어듦 | 배포에서 3팔이 1팔로 줄었는데 응답은 멀쩡해 보였다(2026-09-07) |
 | **G5** | 사진 없이 피부를 판정 | RAG 코퍼스로도 그럴듯한 답은 나온다. 거기엔 이 보호자의 개가 없다 |
 | **G6** | 찾아보지 않고 "자료에 없다"고 함 | 코퍼스에 뭐가 있는지는 검색해 봐야 안다. **검색한 뒤의 거절은 정당하다** |
+| **G7** | 판정이 말하지 않은 계열을 말함 | `group`이 `null`(확신 낮음)이면 막대(`groups`)가 있어도 주장은 없다. 모델은 1등 막대를 읽고 단정한다 — **실제로 그랬다** |
 
 계열 넷(`솟아오른 변화` · `피부 표면·색·두께 변화` · `벗겨지거나 패인 상처` ·
 `깊거나 단단한 혹`)은 보호자 말이라 **6종과 글자가 하나도 안 겹친다.** 그래서
@@ -186,9 +194,9 @@ $ uv run dogcare ask "코 옆이 찢어진 것처럼 벌어졌어요 어떻게 �
 
 | | |
 |---|---|
-| 게이트 (결정론적) | 막아야 할 것 **9/9** · 헛걸림 **0/7** |
+| 게이트 (결정론적) | 막아야 할 것 **11/11** · 헛걸림 **0/7** |
 | 라우팅 (3회 전 회차 통과) | **15/15** (호출 오류 2회 제외) — 아래 분해 참조 |
-| 단위 테스트 | **71** |
+| 단위 테스트 | **92** |
 | RAG 코퍼스 | 612문서 · 9,768청크 · bge-m3(1024d) |
 | 피부 | 2단계 3팔 앙상블 · stage1 임계값 0.1466 |
 
@@ -228,14 +236,30 @@ StudioProjects/
 폴더 이름이 다르면 `.env` 에서 가리킨다 (`BEHAVIOR_RAG_REPO` · `SKIN_REPO`).
 MCP 서버는 그 경로를 `uv run --project` 에 그대로 넘긴다.
 
+**3분 안에 화면 보기 — 데모 모드.** 서브레포도 가중치도 DB 도 필요 없다. LLM 키만 있으면 된다.
+
 ```bash
 uv sync
-cp .env.example .env        # LLM_API_KEY, HF_TOKEN
-uv run dogcare health       # 서브에이전트가 붙었나
-uv run dogcare ask "산책할 때 줄을 너무 당겨요"
-uv run dogcare ask "여기 좀 봐주세요" --image ~/Pictures/dog.jpg --trace
+cp .env.example .env              # LLM_API_KEY 만 채운다 (Gemini 무료 티어면 된다)
+uv run dogcare --demo serve       # http://127.0.0.1:8765
 ```
 
+데모 모드는 **계약 모양만 같은 스텁** 서브에이전트 둘로 돈다. 오케스트레이터와
+게이트는 진짜와 똑같이 돌고, 답 내용만 몇 문장짜리 고정값이다. 화면과 응답에
+"데모" 가 박힌다.
+
+**진짜로 돌리기.** 세 저장소를 나란히 두고 `.env` 에 `HF_TOKEN` 까지 채운다.
+피부 가중치(1.2GB)는 허깅페이스에서 첫 요청 때 받고, RAG 는 저쪽 `docs/guide.md`
+대로 코퍼스를 적재해 둬야 한다.
+
+```bash
+uv run dogcare health             # 서브에이전트가 붙었나, 앙상블이 3팔인가
+uv run dogcare serve              # 웹 UI
+uv run dogcare ask "산책할 때 줄을 너무 당겨요"
+uv run dogcare ask "여기 좀 봐주세요" --image dog.jpg --box 0.19,0.23,0.28,0.29 --trace
+```
+
+`--box` 는 가이드 프레임(0~1 정규화 x,y,w,h)이다. 웹 UI 에서는 네모를 끌어서 맞춘다.
 가중치 없이 배선만 볼 때는 `SKIN_MOCK=1`.
 
 ## 평가
@@ -246,14 +270,25 @@ uv run python evals/run.py record     # 실제 서버에서 툴 스키마를 받
 uv run python evals/run.py routing    # LLM만 필요 (툴 응답은 고정)
 ```
 
+## 라이선스와 재배포
+
+코드는 MIT. **가중치와 코퍼스는 이 저장소에 없고, 재배포하지 않는다.**
+
+- 피부 가중치는 AI Hub 「반려동물 피부 질환 데이터」 파생물이라 개인 학습·연구·포트폴리오
+  목적으로만 쓴다. 상용은 약관 확인이 필요하다
+- 행동 상담 코퍼스의 보듬TV 자막은 개인·학습 목적 이용이다. 논문·기관 자료만으로 돌리는
+  설정은 저쪽 `corpus` 필드로 바로 된다
+- 그래서 남이 클론하면 **데모 모드**가 첫 화면이다. 진짜 모드는 자기 데이터로 적재한 사람의 것이다
+
 ## 기술 스택
 
 | 영역 | 사용 |
 |---|---|
 | 오케스트레이션 | MCP (stdio) · OpenAI 호환 tool calling |
+| 웹 UI | FastAPI · SSE 단계 표시 · 바닐라 JS 한 장 (가이드 프레임 드래그) |
 | LLM | Gemini 무료 티어 기본. `LLM_BASE_URL`만 바꾸면 LM Studio / Ollama / vLLM |
 | 서브에이전트 | FastAPI+pgvector+bge-m3 (RAG) · PyTorch+timm 3팔 앙상블 (피부) |
-| 도구 | uv, pytest, ruff |
+| 도구 | uv, pytest, ruff, GitHub Actions (ubuntu + windows) |
 
 ## 한계
 

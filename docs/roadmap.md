@@ -17,8 +17,8 @@ GitHub Pages 는 정적 파일만 서빙한다. 파이썬·토치·postgres 는 
 - [x] **A3 스크린샷** — `docs/assets/ui-*.png` (헤드리스 Chromium). 적대적 질문 장면에서 **G7 을 새로 찾았다** — group 이 null 인데 막대를 읽고 계열을 단정
 - [x] **C1 MCP 서버 테스트** — `tests/test_mcp_servers.py`: 모델 뷰에 6종 어휘 0건, 스텁 계약 모양이 진짜와 같음
 - [x] **C2 tools.json 드리프트 검사** — `tests/test_tools_snapshot.py`: 서버 코드의 `@mcp.tool` 이름과 스냅샷 대조, 스텁과 진짜의 툴 이름 일치
-- [ ] **A5 CI** — 게이트·단위 테스트·린트 (LLM 불필요)
-- [ ] **A4 LICENSE + 재배포 정책 절**
+- [x] **A5 CI** — `.github/workflows/ci.yml`: ruff · pytest · 게이트 평가. ubuntu + windows 매트릭스
+- [x] **A4 LICENSE + 재배포 정책 절** — MIT(코드만). 가중치·코퍼스·스크린샷 사진의 조건을 LICENSE 와 README 에 적음
 - [ ] **공개 전환** ← 사용자가 직접 (HF 릴리스 public 도 사용자 계정)
 
 ## B. 서사

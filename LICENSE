@@ -1,0 +1,35 @@
+MIT License
+
+Copyright (c) 2026 gayeoniee (Hong Ga-yeon)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+이 라이선스는 **이 저장소의 코드**에만 적용됩니다. 여기서 부르는 두 서브에이전트의
+산출물은 별도의 조건을 따릅니다:
+
+- 피부 스크리닝 가중치 — AI Hub 「반려동물 피부 질환 데이터」(dataSetSn=561,
+  한국지능정보사회진흥원) 파생물. 개인 학습·연구·포트폴리오 목적으로만 씁니다.
+  상용 서비스에 쓰려면 AI Hub 약관 확인이 필요합니다. 이 저장소는 가중치를
+  포함하지 않습니다.
+- 행동 상담 코퍼스 — PMC 오픈액세스 논문(대부분 CC-BY)과 기관 가이드, 그리고
+  보듬TV 자막(개인·학습 목적 이용). 이 저장소는 코퍼스를 포함하지 않습니다.
+  데모 모드의 "자료" 는 실제 코퍼스가 아닌 고정 문장입니다.
+- 스크린샷의 임상 사진 — PMC 오픈액세스 증례(Veterinary Dermatology, CC-BY) 도판.
