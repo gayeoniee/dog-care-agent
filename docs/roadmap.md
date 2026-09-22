@@ -93,6 +93,11 @@ GitHub Pages 는 정적 파일만 서빙한다. 파이썬·토치·postgres 는 
 
 - [ ] 적대적 20×3 Gemini 재측정 (쿼터) → `freeze` 로 기준선 갱신
 - [ ] Gemini 판정기로 적대적 트레이스 채점 (쿼터)
-- [ ] 로컬 모델 최종 선택 — 사용자와 (숫자상 qwen3:8b 8K 변형)
-- [ ] D2 HF Spaces 라이브 데모 — 사용자 계정
+- [x] 로컬 모델 최종 선택 — **qwen3:8b (8K 변형 `qwen3-8k`)**, 사용자 선택 2026-09-22. `.env.example` (B) 블록
+- [ ] D2 HF Spaces 라이브 데모 — **공개 전환과 함께** (사용자 결정). 절차:
+  1. huggingface.co/new-space → SDK **Docker** · Public · 이름 `dog-care-agent`
+  2. Settings → Variables and secrets → **Secret** `LLM_API_KEY` (Gemini). 나머지는 Dockerfile 의 ENV 가 정한다 (`DOGCARE_DEMO=1`, `RATE_PER_MIN=6`)
+  3. `git remote add space https://huggingface.co/spaces/gayoniee/dog-care-agent && git push space main`
+     — Dockerfile 이 루트에 있고 `PORT` 를 읽으므로 그대로 뜬다 (Spaces 는 7860)
+  4. 뜨면 README 상단에 Space 링크. 무료 CPU 로 충분하다 — 스텁이라 가중치·DB 가 없다
 - [ ] 공개 전환 — 사용자
