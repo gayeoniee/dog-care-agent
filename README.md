@@ -10,6 +10,11 @@
 ![gates](https://img.shields.io/badge/safety%20gates-7-brightgreen)
 ![ci](https://github.com/gayeoniee/dog-care-agent/actions/workflows/ci.yml/badge.svg)
 ![license](https://img.shields.io/badge/license-MIT-blue)
+[![space](https://img.shields.io/badge/🤗%20Spaces-live%20demo-FFD21E)](https://huggingface.co/spaces/gayoniee/dog-care-agent)
+
+**▶ 라이브 데모: <https://huggingface.co/spaces/gayoniee/dog-care-agent>** — 데모 모드(스텁 서브에이전트).
+게이트·고쳐쓰기·조립·트레이스는 진짜와 같고, 상담 본문만 고정값이다. 무료 Gemini 키 하나로
+돌아서 분당 요청 수를 제한한다 — `429` 가 보이면 잠시 뒤에.
 
 | | |
 |---|---|

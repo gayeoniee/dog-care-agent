@@ -94,12 +94,17 @@ GitHub Pages 는 정적 파일만 서빙한다. 파이썬·토치·postgres 는 
 - [ ] 적대적 20×3 Gemini 재측정 (쿼터) → `freeze` 로 기준선 갱신
 - [ ] Gemini 판정기로 적대적 트레이스 채점 (쿼터)
 - [x] 로컬 모델 최종 선택 — **qwen3:8b (8K 변형 `qwen3-8k`)**, 사용자 선택 2026-09-22. `.env.example` (B) 블록
-- [ ] D2 HF Spaces 라이브 데모 — 공개 전환(2026-09-22 완료)과 함께. **Docker SDK 가 유료로
+- [x] D2 HF Spaces 라이브 데모 — **https://huggingface.co/spaces/gayoniee/dog-care-agent** (2026-09-22, RUNNING · `/api/health` 200). 공개 전환과 함께. **Docker SDK 가 유료로
   잠겨 있어서**(new-space 화면에 Paid 배지) 계획을 바꿨다 — **Gradio SDK 위에 FastAPI 를 그대로**
   띄운다. Gradio 런타임은 `python app.py` 를 돌리고 7860 이 열리길 기다릴 뿐이다. 절차:
   1. HF 토큰에 **쓰기 권한** — fine-grained 면 "Write access to contents/settings of all repos
      under your personal namespace". 지금 토큰(`DAENGS_APP`)은 릴리스 모델 읽기뿐이라 403
   2. `uv run tools/push_space.py` — Space 생성 · Secret `LLM_API_KEY` · Variables · 업로드까지 한 번에.
      `space/app.py` + `space/README.md`(YAML 머리말) + `src/` + 스텁 둘 + `uv export` 한 requirements.txt 만 올린다
-  3. 뜨면 README 상단에 Space 링크. 무료 CPU 로 충분하다 — 스텁이라 가중치·DB 가 없다
+  3. 뜨면 README 상단에 Space 링크 — 달았다
+  - 걸렸던 것 셋: ① 무료 CPU Basic 도 PRO 전용(402) → 무료는 **ZeroGPU** 뿐이라 `zero-a10g` 로 만든다.
+    ② 런타임이 `gradio[mcp]` 를 같이 깔아 `mcp<2` 를 요구 → lock 대신 직접 의존성만, Space 에서만 `mcp>=1.21,<2`
+    (1.30 에서 119 테스트 통과). ③ ZeroGPU 는 `@spaces.GPU` 함수 목록의 startup report 가 없으면 죽는데
+    그 보고는 `gr.Blocks.launch` 훅이 보낸다 → gradio 를 안 띄우니 `startup_report()` 를 직접 부른다 (`space/app.py`)
+  - 라이브 e2e: 요청 → SSE → 결과까지 돌았고, LLM 호출은 Gemini 일일 쿼터 429 (재측정 대기와 같은 원인)
 - [x] 공개 전환 — 사용자, 2026-09-22

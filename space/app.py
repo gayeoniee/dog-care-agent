@@ -26,5 +26,24 @@ os.environ.setdefault("PYTHONUTF8", "1")
 
 from dogcare.server import serve  # noqa: E402
 
+# ★ 무료 하드웨어가 ZeroGPU 뿐이다(CPU Basic 은 PRO). ZeroGPU 는 시작할 때
+#   `@spaces.GPU` 함수 목록을 **startup report** 로 받지 못하면
+#   "No @spaces.GPU function detected during startup" 으로 죽는다. 그 보고는
+#   `spaces` 가 `gr.Blocks.launch` 에 끼워 넣은 훅이 보내는데, 우리는 gradio 를
+#   띄우지 않으므로 같은 함수를 직접 부른다. 자리표시 함수는 **부르지 않는다** —
+#   이 데모는 GPU 를 안 쓴다. (spaces/zero/__init__.py 의 startup() 과 같은 순서)
+try:
+    import spaces  # 런타임이 깔아 준다. 로컬엔 없다.
+
+    @spaces.GPU
+    def _zerogpu_placeholder() -> None:
+        return None
+
+    from spaces.zero.client import startup_report
+
+    startup_report()
+except Exception as exc:  # 로컬(패키지 없음)·비-ZeroGPU 에선 그냥 지나간다
+    print("zerogpu startup report skipped:", type(exc).__name__, exc)
+
 if __name__ == "__main__":
     serve(host="0.0.0.0", port=int(os.environ.get("PORT", "7860")), demo=True)

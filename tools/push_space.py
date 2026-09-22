@@ -12,7 +12,7 @@
 Space 는 README.md 맨 위에 YAML 머리말(sdk · app_file …)을 요구한다. 그걸 GitHub
 README 에 넣으면 GitHub 이 표로 그려서 지저분해진다. 그래서 **Space 용 트리를 따로
 조립**한다 — `space/README.md` 와 `space/app.py` 를 루트로 올리고, `src/` 와 스텁
-서버 둘, `uv export` 로 뽑은 requirements.txt 만 싣는다. 진짜 서버 · 평가 · 테스트 ·
+서버 둘, pyproject 직접 의존성으로 만든 requirements.txt 만 싣는다. 진짜 서버 · 평가 · 테스트 ·
 문서는 안 올라간다 (필요 없고, 저쪽 레포 경로가 박혀 있다).
 
 SDK 는 **Gradio** 다. Docker SDK 가 유료로 잠겨서(2026-09) Dockerfile 은 로컬·CI 용.
@@ -24,7 +24,6 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -46,12 +45,20 @@ FILES = [
 ]
 
 
+#: Space 런타임이 `gradio[mcp]` 를 같이 깔고, 그게 `mcp<2` 를 요구한다. 우리 lock 은
+#: mcp 2.x 라 그대로 올리면 pip 이 ResolutionImpossible 로 빌드를 죽인다 (실제로 그랬다).
+#: 코드에 1.x shim(`_attr`, FastMCP 폴백)이 있고 1.30 에서 119 테스트가 통과하므로
+#: Space 에서만 1.x 를 쓴다.
+SPACE_MCP = "mcp>=1.21,<2"
+
+
 def _requirements() -> str:
-    """uv.lock 을 그대로 고정한 requirements.txt. Space 는 pip 으로 깐다."""
-    out = subprocess.run(
-        ["uv", "export", "--no-dev", "--no-hashes", "--no-emit-project", "--no-header"],
-        cwd=ROOT, capture_output=True, text=True, check=True, encoding="utf-8").stdout
-    return "".join(line for line in out.splitlines(keepends=True) if not line.startswith("#"))
+    """pyproject 의 직접 의존성만, 느슨하게. lock 을 그대로 고정하면 mcp 가 충돌한다."""
+    import tomllib
+
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]
+    deps = [SPACE_MCP if d.startswith("mcp") else d for d in project["dependencies"]]
+    return "".join(d + "\n" for d in deps)
 
 
 def _stage(dst: Path) -> list[Path]:
@@ -91,6 +98,7 @@ def main() -> int:
 
         api = HfApi(token=token)
         url = api.create_repo(a.space, repo_type="space", space_sdk="gradio",
+                              space_hardware=os.environ.get("HF_SPACE_HARDWARE", "zero-a10g"),
                               private=False, exist_ok=True)
         print("Space:", url)
         # ★ 키는 Secret 으로만. 모델·엔드포인트는 Variable(공개) — 값이 비밀이 아니다.
