@@ -64,6 +64,8 @@ async def _ask(args: argparse.Namespace) -> int:
         print("※ 이 답은 LLM 이 아니라 코드가 조립했습니다 — 게이트가 두 번 걸렸습니다.")
     for v in turn.trace.violations:
         print(f"※ 게이트: {v}")
+    for k, why in turn.trace.subagent_failures.items():
+        print(f"※ 서브에이전트 {k} 는 붙지 않은 채 답했습니다 — {why}")
 
     calls = " · ".join(f"{c.name}({c.elapsed_ms:.0f}ms)" for c in turn.trace.calls) or "없음"
     print(f"툴 {len(turn.trace.calls)}회: {calls}")

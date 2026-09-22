@@ -192,6 +192,7 @@ def _summarize(turn: Any, trace_path: Path, sid: str) -> dict[str, Any]:
         "calls": [{"name": c.name, "elapsed_ms": c.elapsed_ms, "error": c.error}
                   for c in turn.trace.calls],
         "screening": screening,
+        "subagent_failures": turn.trace.subagent_failures,
         "trace": trace_path.name,
     }
 

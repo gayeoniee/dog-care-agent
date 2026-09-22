@@ -169,6 +169,7 @@ function render(r) {
   d.appendChild(meta);
   if (r.composed) { const c = document.createElement("div"); c.className = "composed"; c.textContent = "※ 이 답은 LLM 이 아니라 코드가 조립했습니다 — 게이트가 두 번 걸렸습니다."; d.appendChild(c); }
   r.violations.forEach((v) => { const g = document.createElement("div"); g.className = "gate"; g.textContent = "⛔ " + v; d.appendChild(g); });
+  Object.entries(r.subagent_failures || {}).forEach(([k, why]) => { const g = document.createElement("div"); g.className = "composed"; g.textContent = "※ 서브에이전트 " + k + " 는 붙지 않은 채 답했습니다 — " + why; d.appendChild(g); });
   if (r.screening) {
     const s = r.screening; const c = document.createElement("div"); c.className = "card";
     let html = "<b>피부 판정</b> " + esc(s.verdict) + " · 이상 " + (s.abnormal_percent ?? "–") + "% · 앙상블 " + (s.arms ?? "?") + "팔" + (s.demo ? ' <span class="chip demo">스텁</span>' : "");

@@ -32,9 +32,9 @@ GitHub Pages 는 정적 파일만 서빙한다. 파이썬·토치·postgres 는 
 ## C. 결함
 
 - [x] **C3 지연 체감** — SSE 단계 표시(툴 부르는 중 → 게이트 → 고쳐 쓰는 중). 토큰 스트리밍을 안 하는 이유는 `server.py` 독스트링과 README 에
-- [ ] **C4 LLM 공급자** — 로컬(LM Studio) 경로 문서화
-- [ ] **C5 서브에이전트 다운 e2e 실측** — 그 트레이스를 데모로
-- [ ] **C6 Windows 흔적** — CI(리눅스)에서 걸리는지
+- [x] **C4 LLM 공급자** — `.env.example` 에 Gemini(기본) · LM Studio · Ollama 블록. 3.6-flash 503 과 3.1-flash-lite 실측을 적음
+- [x] **C5 서브에이전트 다운 e2e 실측** — `SKIN_REPO` 를 없는 경로로 두고 사진 질문. 피부 툴이 `그런 툴이 없습니다`(0ms) 로 돌아오자 모델이 "사진 분석 기능이 준비되어 있지 않습니다" 라고 정직하게 답하고 RAG 로 이어감. 빠진 서브에이전트를 trace·CLI·화면에 적게 함(`subagent_failures`)
+- [x] **C6 Windows 흔적** — CI ubuntu + windows 매트릭스 둘 다 초록 (run 35706344150)
 
 ## D. 하지 않는다
 

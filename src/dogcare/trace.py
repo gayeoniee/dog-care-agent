@@ -45,6 +45,9 @@ class Trace:
     #: LLM 을 빼고 코드가 조립했나.
     composed: bool = False
     blocked: bool = False
+    #: 이 턴에 **붙지 않은** 서브에이전트와 그 이유. 하나가 죽어도 나머지로 답하는데,
+    #: 무엇이 빠진 채 답했는지는 기록과 화면에 적혀야 한다.
+    subagent_failures: dict[str, str] = field(default_factory=dict)
     elapsed_ms: float = 0.0
 
     def add(self, call: ToolCall) -> ToolCall:

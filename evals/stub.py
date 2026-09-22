@@ -42,9 +42,19 @@ CANNED: dict[str, Any] = {
         "action": "수의사 진료를 받아보시기를 권합니다.",
         "stage1": {"abnormal_prob": 0.71, "abnormal_percent": 71.0,
                    "threshold": 0.1466, "calibrated": True},
-        "stage2": {"shown": True, "groups": {"융기·발진": 0.21, "표면 변화": 0.54,
-                                             "미란·궤양": 0.15, "결절·종괴": 0.10},
-                   "group": "표면 변화", "alert": None},
+        # ★ 실제 계약 모양 — group 은 dict, 이름은 2026-09-10 의 보호자 말.
+        #   옛 이름("표면 변화")·문자열 group 으로 돌린 적이 있다. 게이트는 양쪽을 받지만
+        #   평가는 진짜와 같은 모양으로 재야 숫자가 진짜에 대해서도 참이다.
+        "stage2": {"shown": True,
+                   "groups": [{"name": "피부 표면·색·두께 변화", "prob": 0.54, "percent": 54.0},
+                              {"name": "솟아오른 변화", "prob": 0.21, "percent": 21.0},
+                              {"name": "벗겨지거나 패인 상처", "prob": 0.15, "percent": 15.0},
+                              {"name": "깊거나 단단한 혹", "prob": 0.10, "percent": 10.0}],
+                   "group": {"name": "피부 표면·색·두께 변화", "prob": 0.54, "percent": 54.0,
+                             "confidence": 0.38,
+                             "text": "모양만 보면 피부 표면·색·두께 변화에 가깝습니다.",
+                             "feature": "딱지, 둥근 비늘, 검어진 피부, 두꺼워진 피부"},
+                   "alert": None},
         "text": "피부에 이상 소견이 보입니다.",
         "disclaimer": ("이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. "
                        "참고용 스크리닝 정보로만 사용해 주세요."),

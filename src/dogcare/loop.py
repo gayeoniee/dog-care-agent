@@ -254,6 +254,7 @@ async def run_turn(question: str, image_path: str | None = None,
             report = check(answer, facts)
 
         trace.answer = answer
+        trace.subagent_failures = dict(getattr(agents, "failed", {}) or {})
         trace.composed = composed
         trace.violations = [str(v) for v in report.violations]
         trace.blocked = trace.blocked or not report.ok
