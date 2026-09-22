@@ -132,7 +132,9 @@ async def test_모델이_경로와_네모를_지어내도_코드가_덮어쓴다
     agents = _FakeAgents()
     turn = await run_turn("봐주세요", image_path="진짜/사진.jpg", guide_box=[0.1, 0.5, 0.5, 0.3],
                           settings=get_settings(), sub=agents)          # type: ignore[arg-type]
-    assert agents.seen == [{"image_path": "진짜/사진.jpg", "guide_box": [0.1, 0.5, 0.5, 0.3]}]
+    # 코드가 먼저 한 번 부르고(결정론적), 모델이 또 불러도 인자는 덮어써진다
+    assert agents.seen[0] == {"image_path": "진짜/사진.jpg", "guide_box": [0.1, 0.5, 0.5, 0.3]}
+    assert all(s == agents.seen[0] for s in agents.seen)
     # 면책은 **코드가** 붙인다 — 모델이 안 썼는데도 붙어 있어야 한다.
     assert ABNORMAL_JSON["disclaimer"] in turn.answer
     assert turn.gates.ok, str(turn.gates)
@@ -211,3 +213,40 @@ async def test_이어_묻기에서_6종_이름을_쓰면_잡힌다(monkeypatch):
     assert turn.trace.first_pass_violations and turn.trace.first_pass_violations[0].startswith("G1")
     assert turn.trace.repaired and turn.gates.ok
     assert "궤양" not in turn.answer
+
+
+
+async def test_사진이_없으면_피부_툴은_목록에도_없다(monkeypatch):
+    """없는 사진에 툴을 부르는 실수를 프롬프트로 막는 대신 불가능하게 한다."""
+    import dogcare.loop as loop
+
+    seen_tools: list[list[str]] = []
+
+    class _Spy:
+        def __init__(self, settings) -> None: ...
+
+        async def chat(self, messages, tools=None):
+            seen_tools.append([x["function"]["name"] for x in (tools or [])])
+            return {"role": "assistant", "content": "안녕하세요."}
+
+    monkeypatch.setattr(loop, "ToolCallingLLM", _Spy)
+    await run_turn("안녕", settings=get_settings(), sub=_FakeAgents())   # type: ignore[arg-type]
+    assert seen_tools and "screen_skin_photo" not in seen_tools[0]
+
+
+async def test_사진이_있으면_모델이_안_불러도_판정은_돈다(monkeypatch):
+    import dogcare.loop as loop
+
+    class _NoTool:
+        def __init__(self, settings) -> None: ...
+
+        async def chat(self, messages, tools=None):
+            return {"role": "assistant", "content": "피부에 이상 소견이 보입니다."}
+
+    monkeypatch.setattr(loop, "ToolCallingLLM", _NoTool)
+    agents = _FakeAgents()
+    turn = await run_turn("봐줘", image_path="a.jpg", guide_box=[0.1, 0.1, 0.5, 0.5],
+                          settings=get_settings(), sub=agents)          # type: ignore[arg-type]
+    assert agents.seen == [{"image_path": "a.jpg", "guide_box": [0.1, 0.1, 0.5, 0.5]}]
+    assert turn.trace.calls[0].name == "screen_skin_photo"
+    assert ABNORMAL_JSON["disclaimer"] in turn.answer

@@ -211,11 +211,25 @@ async def run_turn(question: str, image_path: str | None = None,
         messages += list(history or [])
         messages.append({"role": "user", "content": user})
 
+        # ★ 결정론적 신호는 코드가 씁니다 — 라우터에게 맡기지 않습니다.
+        #   사진이 있으면 피부 판정은 **무조건** 돕니다. 모델이 고를 일이 아닙니다.
+        #   사진이 없으면 screen_skin_photo 를 **툴 목록에서 뺍니다** — 없는 사진에 툴을
+        #   부르는 실수를 프롬프트로 막는 대신 불가능하게 합니다.
+        #   로컬 7B 모델 실측(granite4.1 16/30 · 18/30)에서 두 실수가 가장 흔했습니다.
+        #   팀 버전(DAENGS)의 planner 가 같은 자리다 — 결정론적 신호를 LLM 앞에서 소비한다.
+        tools = [x for x in agents.tools
+                 if image_path or x["function"]["name"] != "screen_skin_photo"]
+        if image_path and "screen_skin_photo" in agents.owner:
+            forced = [{"id": "skin-0", "type": "function",
+                       "function": {"name": "screen_skin_photo", "arguments": "{}"}}]
+            messages.append({"role": "assistant", "content": None, "tool_calls": forced})
+            await _execute(forced, agents, trace, messages, pinned, emit)
+
         draft = ""
         for _ in range(settings.max_tool_rounds):
             trace.rounds += 1
             emit("llm", {"round": trace.rounds})
-            msg = await llm.chat(messages, agents.tools)
+            msg = await llm.chat(messages, tools)
             messages.append(msg)
             tool_calls = msg.get("tool_calls") or []
             if not tool_calls:
@@ -243,7 +257,7 @@ async def run_turn(question: str, image_path: str | None = None,
             template = _REPAIR_SEARCH if search else _REPAIR
             messages.append({"role": "user", "content": template.format(violations=str(report))})
             trace.rounds += 1
-            msg = await llm.chat(messages, agents.tools if search else None)
+            msg = await llm.chat(messages, tools if search else None)
             messages.append(msg)
             if search and (tool_calls := msg.get("tool_calls") or []):
                 await _execute(tool_calls, agents, trace, messages, pinned, emit)
