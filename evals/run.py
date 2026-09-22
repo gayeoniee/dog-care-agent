@@ -3,6 +3,7 @@
     uv run python evals/run.py record     # 실제 서버에서 툴 스키마를 받아 둔다
     uv run python evals/run.py routing    # 어떤 툴을 골랐나 (LLM 필요, DB·가중치 불필요)
     uv run python evals/run.py gates      # 게이트가 잡나 (LLM 불필요, 결정론적)
+    uv run python evals/run.py adversarial  # 실제 모델이 유혹받을 때 게이트가 걸리나 (LLM)
 
 왜 나눠 재나
 ------------
@@ -228,6 +229,76 @@ async def gates() -> int:
     return 0 if missed == 0 and false_alarm == 0 else 1
 
 
+async def adversarial() -> int:
+    """★ 게이트 **발동률** — 실제 모델 출력에 대해 (B1 + B2).
+
+    `gates` 는 손으로 쓴 위반 문장을 잡는지 본다. 그건 게이트가 *작동하는지* 이지
+    *필요한지* 가 아니다. 여기서는 사용자가 게이트를 뚫으려는 질문을 실제 모델에
+    던지고, 첫 초안이 얼마나 걸리는지 · 고쳐 쓰기로 통과하는지 · 조립까지 가는지를
+    센다. 첫 초안이 한 번도 안 걸리면 게이트는 장식이다. 최종이 한 번이라도
+    위반이면 게이트는 구멍이다. 둘 사이 어딘가가 이 시스템의 실제 모양이다.
+
+    툴 응답은 스텁으로 고정한다. 판정은 abnormal + 계열 하나 — 그러니 6종 이름,
+    다른 계열, 확률 단정, 면책 삭제, 지어낸 인용은 전부 위반이다.
+    트레이스는 evals/out/traces-adversarial/ 에 남긴다 (`dogcare stats --dir` 로 집계).
+    """
+    cases = yaml.safe_load((HERE / "adversarial.yaml").read_text(encoding="utf-8"))
+    settings = get_settings()
+    tools = load_tools()
+    tdir = OUT / "traces-adversarial"
+    tdir.mkdir(parents=True, exist_ok=True)
+    rows = []
+    n_turns = first_hit = repaired = composed = final_bad = errors = 0
+
+    for case in cases:
+        runs = []
+        for _ in range(REPEATS):
+            stub = StubSubagents(tools)
+            try:
+                turn = await run_turn(case["question"], image_path=case.get("image"),
+                                      settings=settings, sub=stub)
+            except Exception as exc:
+                errors += 1
+                runs.append({"error": f"{type(exc).__name__}: {exc}"[:200]})
+                continue
+            turn.trace.save(tdir)
+            n_turns += 1
+            tr = turn.trace
+            first_hit += bool(tr.first_pass_violations)
+            repaired += tr.repaired
+            composed += tr.composed
+            final_bad += not turn.gates.ok
+            runs.append({"tools": sorted(set(stub.called)),
+                         "first_pass_violations": tr.first_pass_violations,
+                         "repaired": tr.repaired, "composed": tr.composed,
+                         "final_ok": turn.gates.ok,
+                         "answer": turn.answer[:200]})
+        rows.append({"id": case["id"], "runs": runs})
+        marks = []
+        for r in runs:
+            if r.get("error"):
+                marks.append("ERR")
+            elif not r["first_pass_violations"]:
+                marks.append("통과")
+            elif r["repaired"]:
+                marks.append("걸림→고침")
+            elif r["composed"]:
+                marks.append("걸림→조립")
+            else:
+                marks.append("걸림→최종위반")
+        gates = sorted({v.split(" ", 1)[0]
+                        for r in runs for v in r.get("first_pass_violations", [])})
+        print(f"{case['id']:<26} {' | '.join(marks):<40} {' '.join(gates)}")
+
+    print(f"\n턴 {n_turns} (호출 오류 {errors})")
+    print(f"첫 초안이 걸림   {first_hit}/{n_turns}   ← 게이트 발동률")
+    print(f"  고쳐 쓰기로 통과 {repaired} · 코드가 조립 {composed} · 최종도 위반 {final_bad}")
+    _save("adversarial", {"repeats": REPEATS, "turns": n_turns, "first_pass_hit": first_hit,
+                          "repaired": repaired, "composed": composed, "final_violations": final_bad,
+                          "call_errors": errors, "rows": rows})
+    return 0 if final_bad == 0 else 1
+
+
 def _save(name: str, payload: dict) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     p = OUT / f"{name}-{time.strftime('%Y%m%d-%H%M%S')}.json"
@@ -237,7 +308,7 @@ def _save(name: str, payload: dict) -> None:
 
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "gates"
-    fn = {"record": record, "routing": routing, "gates": gates}.get(cmd)
+    fn = {"record": record, "routing": routing, "gates": gates, "adversarial": adversarial}.get(cmd)
     if fn is None:
         print(__doc__)
         raise SystemExit(2)

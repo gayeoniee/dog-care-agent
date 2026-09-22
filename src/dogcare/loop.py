@@ -71,9 +71,15 @@ class Turn:
 
 
 def _facts(question: str, image_path: str | None, calls: list[ToolCall],
-           settings: Settings) -> TurnFacts:
-    """게이트가 볼 사실. **툴이 실제로 돌려준 것만** 담습니다."""
-    screening = None
+           settings: Settings, prior_screening: dict[str, Any] | None = None) -> TurnFacts:
+    """게이트가 볼 사실. **툴이 실제로 돌려준 것만** 담습니다.
+
+    `prior_screening` 은 **앞 턴**의 판정입니다. 이번 턴에 사진이 없어도 "그거
+    궤양이야?" 같은 이어 묻기는 그 판정 위에서 답하므로, 게이트도 그 판정을
+    봐야 합니다 — 없으면 G1·G7 이 이어 묻기에서 눈을 감습니다. 팀 버전의
+    `ScreeningHistory` 가 같은 자리입니다. 이번 턴에 새 판정이 있으면 그게 이깁니다.
+    """
+    screening = prior_screening
     coverage: str | None = None
     n_sources = 0
     for c in calls:
@@ -158,6 +164,7 @@ async def _execute(tool_calls: list[dict[str, Any]], agents: Subagents, trace: T
 async def run_turn(question: str, image_path: str | None = None,
                    guide_box: list[float] | None = None,
                    history: list[dict[str, str]] | None = None,
+                   prior_screening: dict[str, Any] | None = None,
                    settings: Settings | None = None,
                    sub: Subagents | None = None,
                    on_event: OnEvent | None = None) -> Turn:
@@ -177,6 +184,16 @@ async def run_turn(question: str, image_path: str | None = None,
                 pinned["screen_skin_photo"]["guide_box"] = guide_box
                 note += " — 가이드 프레임도 함께 주어졌습니다"
             user = f"{question}\n\n{note}. 경로와 프레임은 코드가 채웁니다.]"
+        elif prior_screening:
+            # 사진은 없지만 앞 턴에 판정이 있다. 모델에게는 **판정이 말한 것만** 준다 —
+            # verdict 와 계열 이름. 6종 분포·labels 는 애초에 뷰에 없다.
+            s2 = prior_screening.get("stage2") or {}
+            g = s2.get("group")
+            gname = g.get("name") if isinstance(g, dict) else g
+            note = (f"[앞 턴의 피부 판정 기록: verdict={prior_screening.get('verdict')}"
+                    + (f", 계열={gname}" if gname else ", 계열 없음(확신 낮음)")
+                    + ". 새 사진은 없습니다 — 이 기록 위에서 답하고, 판정을 새로 지어내지 마세요.]")
+            user = f"{question}\n\n{note}"
         messages: list[dict[str, Any]] = [{"role": "system", "content": SYSTEM}]
         messages += list(history or [])
         messages.append({"role": "user", "content": user})
@@ -197,10 +214,11 @@ async def run_turn(question: str, image_path: str | None = None,
             # 루프가 도는 걸 모르고 토큰을 태우는 게 제일 흔한 사고입니다.
             trace.blocked = True
 
-        facts = _facts(question, image_path, trace.calls, settings)
+        facts = _facts(question, image_path, trace.calls, settings, prior_screening)
         answer = _attach_disclaimer(draft, facts)
         emit("gate", {"pass": 1})
         report = check(answer, facts)
+        trace.first_pass_violations = [str(v) for v in report.violations]
 
         if not report.ok and draft:
             emit("repair", {"violations": [str(v) for v in report.violations]})
@@ -220,10 +238,11 @@ async def run_turn(question: str, image_path: str | None = None,
                 msg = await llm.chat(messages)
                 messages.append(msg)
                 # 툴을 더 불렀으니 **사실이 달라졌습니다.** 다시 모읍니다.
-                facts = _facts(question, image_path, trace.calls, settings)
+                facts = _facts(question, image_path, trace.calls, settings, prior_screening)
             answer = _attach_disclaimer(msg.get("content") or "", facts)
             emit("gate", {"pass": 2})
             report = check(answer, facts)
+            trace.repaired = report.ok
 
         composed = False
         if not report.ok or not answer.strip():
@@ -235,6 +254,7 @@ async def run_turn(question: str, image_path: str | None = None,
             report = check(answer, facts)
 
         trace.answer = answer
+        trace.composed = composed
         trace.violations = [str(v) for v in report.violations]
         trace.blocked = trace.blocked or not report.ok
         trace.elapsed_ms = round((time.perf_counter() - t0) * 1000, 1)

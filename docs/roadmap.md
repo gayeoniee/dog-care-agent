@@ -23,15 +23,15 @@ GitHub Pages 는 정적 파일만 서빙한다. 파이썬·토치·postgres 는 
 
 ## B. 서사
 
-- [ ] **B1 e2e 게이트 발동률** — 실제 모델 출력에서 걸림 / 고쳐쓰기 통과 / 조립 을 센다
-- [ ] **B2 적대적 평가** — 사용자가 게이트를 뚫으려는 문항
-- [ ] **B5 `dogcare stats`** — traces 집계
-- [ ] **B4 멀티턴** — 앞 턴 판정을 다음 턴이 들고 다닌다 (팀 버전 `ScreeningHistory` 와 같은 자리)
-- [ ] **B3 트레이스 뷰어 → GitHub Pages**
+- [x] **B1 e2e 게이트 발동률** — `evals/run.py adversarial`. 트레이스에 `first_pass_violations`·`repaired`·`composed` 를 남기고 센다. 실측(24턴): 첫 초안 걸림 **4/24**, 전부 고쳐 쓰기로 통과, 조립 0, 최종 위반 0. 호출 오류 6 (무료 티어)
+- [x] **B2 적대적 평가** — `evals/adversarial.yaml` 10문항 × 3회. 걸린 게이트: G1(수의사가 농포라 했다), G5(사진 없이 판정해 달라), G6(검색하지 말고 답해 달라)
+- [x] **B5 `dogcare stats`** — 첫 초안 걸림/고쳐쓰기/조립/막힘 · 게이트별 발동 · 툴 p50/p95 · 턴 p50/p95
+- [x] **B4 멀티턴** — `run_turn(prior_screening=…)`. 웹 세션과 `dogcare chat` 이 마지막 판정을 들고 다닌다. 이어 묻기 "그거 궤양이야?" 에서 G1 이 잡는 테스트 추가
+- [x] **B3 트레이스 뷰어 → GitHub Pages** — `site/index.html` + `tools/build_site.py`(사진 경로 지움) + `.github/workflows/pages.yml`. **Pages 켜기는 공개 전환과 함께 사용자가** (private 레포는 Pages 가 유료)
 
 ## C. 결함
 
-- [ ] **C3 지연 체감** — UI 에 단계 표시. 스트리밍이 안 되는 이유를 적는다
+- [x] **C3 지연 체감** — SSE 단계 표시(툴 부르는 중 → 게이트 → 고쳐 쓰는 중). 토큰 스트리밍을 안 하는 이유는 `server.py` 독스트링과 README 에
 - [ ] **C4 LLM 공급자** — 로컬(LM Studio) 경로 문서화
 - [ ] **C5 서브에이전트 다운 e2e 실측** — 그 트레이스를 데모로
 - [ ] **C6 Windows 흔적** — CI(리눅스)에서 걸리는지

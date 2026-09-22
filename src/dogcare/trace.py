@@ -35,8 +35,15 @@ class Trace:
     rounds: int = 0
     calls: list[ToolCall] = field(default_factory=list)
     answer: str = ""
-    #: 게이트 위반. **비어 있는 게 통과입니다.**
+    #: 최종 답의 게이트 위반. **비어 있는 게 통과입니다.**
     violations: list[str] = field(default_factory=list)
+    #: **첫 초안**이 걸린 위반. 고쳐 쓰거나 조립하면 `violations` 는 비지만 이건 남습니다 —
+    #: "게이트가 얼마나 자주 걸리나" 는 이 칸에서 셉니다. 최종만 보면 게이트가 늘 한가해 보입니다.
+    first_pass_violations: list[str] = field(default_factory=list)
+    #: 고쳐 쓰기로 통과했나.
+    repaired: bool = False
+    #: LLM 을 빼고 코드가 조립했나.
+    composed: bool = False
     blocked: bool = False
     elapsed_ms: float = 0.0
 

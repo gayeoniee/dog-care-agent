@@ -95,6 +95,55 @@ def _serve(args: argparse.Namespace) -> int:
     return 0
 
 
+async def _stats(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from dogcare.stats import collect, render
+
+    d = Path(args.dir) if args.dir else get_settings().trace_dir
+    print(render(collect(d), d))
+    return 0
+
+
+async def _chat(args: argparse.Namespace) -> int:
+    """여러 턴. 앞 턴의 피부 판정을 다음 턴이 들고 간다 — 웹 UI 와 같은 규칙."""
+    from dogcare.server import _last_screening
+
+    settings = get_settings().with_demo(args.demo)
+    history: list[dict[str, str]] = []
+    prior = None
+    async with Subagents(settings) as agents:
+        if note := agents.note_failures():
+            print(note)
+        print("질문을 입력하세요. 사진은 `/img 경로 x,y,w,h`. 끝내려면 빈 줄.")
+        while True:
+            try:
+                q = input("> ").strip()
+            except EOFError:
+                break
+            if not q:
+                break
+            image = box = None
+            if q.startswith("/img "):
+                parts = q[5:].split(maxsplit=1)
+                image = parts[0]
+                box = _box(parts[1]) if len(parts) > 1 else None
+                q = input("질문> ").strip() or "이거 좀 봐주세요"
+            turn = await run_turn(q, image_path=image, guide_box=box, history=history,
+                                  prior_screening=prior, settings=settings, sub=agents)
+            print(RULE)
+            print(turn.answer)
+            print(RULE)
+            for v in turn.trace.violations:
+                print(f"※ 게이트: {v}")
+            if turn.composed:
+                print("※ 코드가 조립한 답입니다.")
+            history += [{"role": "user", "content": q},
+                        {"role": "assistant", "content": turn.answer}]
+            prior = _last_screening(turn) or prior
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(prog="dogcare", description=__doc__.split("\n")[0])
     ap.add_argument("--demo", action="store_true",
@@ -117,6 +166,13 @@ def main() -> int:
     s.add_argument("--host", default="127.0.0.1")
     s.add_argument("--port", type=int, default=8765)
     s.set_defaults(fn=_serve)
+
+    st = sub.add_parser("stats", help="traces/ 를 집계합니다 — 게이트 발동률·툴 지연")
+    st.add_argument("--dir", help="트레이스 폴더 (기본: TRACE_DIR)")
+    st.set_defaults(fn=_stats)
+
+    c = sub.add_parser("chat", help="여러 턴 — 앞 턴 판정을 들고 간다")
+    c.set_defaults(fn=_chat)
 
     args = ap.parse_args()
     if args.cmd == "serve":

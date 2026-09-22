@@ -1,0 +1,33 @@
+# site/ 를 GitHub Pages 로. 정적 파일뿐이다 — 트레이스 뷰어 · 평가 결과 · 스크린샷.
+# site/data 는 `uv run python tools/build_site.py` 가 만들어 커밋한다 (CI 에서 다시 짓지
+# 않는다 — 트레이스와 평가 결과는 LLM 을 돌려야 나오는 것이라 CI 가 만들 수 없다).
+name: pages
+on:
+  push:
+    branches: [main]
+    paths: ["site/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -94,7 +94,7 @@ REQUIRED = {"contract_version", "verdict", "headline", "body", "action", "stage1
                                   "d.jpg", "e.jpg", "f.jpg"])
 def test_스텁_피부_계약_모양(skin_stub, name):
     r = skin_stub.screen_skin_photo(name)
-    assert REQUIRED <= set(r), REQUIRED - set(r)
+    assert set(r) >= REQUIRED, REQUIRED - set(r)
     assert r["verdict"] in {"normal", "abnormal", "retake"}
     assert r["meta"]["stage2_arms"] == 3
     assert r["_demo"] is True

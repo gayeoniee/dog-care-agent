@@ -50,8 +50,10 @@ class _Job:
 def build_app(settings: Settings) -> FastAPI:
     agents_box: dict[str, Subagents] = {}
     jobs: dict[str, _Job] = {}
-    #: 세션별 대화 — 멀티턴용. 메모리라 서버가 내려가면 사라집니다.
-    sessions: dict[str, list[dict[str, str]]] = {}
+    #: 세션별 상태 — 대화와 **마지막 피부 판정**. 메모리라 서버가 내려가면 사라집니다.
+    #: 판정을 들고 다니는 이유: "그거 궤양이야?" 같은 이어 묻기가 앞 턴 판정 위에서
+    #: 답하므로, 게이트도 그 판정을 봐야 한다 (loop._facts 의 prior_screening).
+    sessions: dict[str, dict[str, Any]] = {}
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -102,7 +104,8 @@ def build_app(settings: Settings) -> FastAPI:
                 raise HTTPException(400, "box 는 0~1 사이 네 숫자입니다") from None
 
         sid = session_id or uuid.uuid4().hex[:8]
-        history = sessions.setdefault(sid, [])
+        state = sessions.setdefault(sid, {"history": [], "screening": None})
+        history = state["history"]
         job = _Job()
         job_id = uuid.uuid4().hex[:8]
         jobs[job_id] = job
@@ -113,11 +116,13 @@ def build_app(settings: Settings) -> FastAPI:
         async def run() -> None:
             try:
                 turn = await run_turn(question, image_path=image_path, guide_box=guide,
-                                      history=list(history), settings=settings,
-                                      sub=agents, on_event=emit)
+                                      history=list(history),
+                                      prior_screening=state["screening"],
+                                      settings=settings, sub=agents, on_event=emit)
                 trace_path = save_trace(turn, settings)
                 history.append({"role": "user", "content": question})
                 history.append({"role": "assistant", "content": turn.answer})
+                state["screening"] = _last_screening(turn) or state["screening"]
                 job.result = _summarize(turn, trace_path, sid)
             except Exception as exc:
                 job.result = {"error": f"{type(exc).__name__}: {exc}"}
@@ -153,6 +158,13 @@ def build_app(settings: Settings) -> FastAPI:
         return FileResponse(p, media_type="application/json")
 
     return app
+
+
+def _last_screening(turn: Any) -> dict[str, Any] | None:
+    for c in turn.trace.calls:
+        if c.name == "screen_skin_photo" and isinstance(c.result, dict) and "verdict" in c.result:
+            return c.result
+    return None
 
 
 def _summarize(turn: Any, trace_path: Path, sid: str) -> dict[str, Any]:

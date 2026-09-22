@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dog-care-agent — 트레이스 뷰어</title>
+<style>
+  :root { --bg:#f6f4ef; --card:#fff; --ink:#1f1d1a; --muted:#6b675f; --line:#e6e1d6;
+          --ok:#1e7f4f; --bad:#b3261e; --warn:#9a6700; --accent:#2f5d8a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); background:var(--bg); }
+  .wrap { max-width:1100px; margin:0 auto; padding:24px 20px 60px; }
+  h1 { font-size:22px; margin:0 0 4px; } .tag { color:var(--muted); margin:0 0 20px; }
+  h2 { font-size:15px; letter-spacing:.02em; color:var(--muted); text-transform:uppercase; margin:28px 0 10px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; }
+  .stat { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+  .stat b { display:block; font-size:24px; } .stat span { font-size:12px; color:var(--muted); }
+  .chip { font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--line); color:var(--muted); background:#faf8f3; margin-right:4px; }
+  .chip.ok { border-color:var(--ok); color:var(--ok); } .chip.bad { border-color:var(--bad); color:var(--bad); } .chip.warn { border-color:var(--warn); color:var(--warn); }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden; font-size:13.5px; }
+  th, td { text-align:left; padding:8px 10px; border-top:1px solid var(--line); vertical-align:top; }
+  th { background:#faf8f3; color:var(--muted); font-weight:600; border-top:0; }
+  tr.row { cursor:pointer; } tr.row:hover td { background:#fbfaf6; }
+  .detail { display:none; } .detail.open { display:table-row; }
+  .detail td { background:#fbfaf6; }
+  .turn { display:grid; grid-template-columns:1fr 1fr; gap:12px; } @media (max-width:760px){ .turn{ grid-template-columns:1fr; } }
+  .box { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-size:13px; white-space:pre-wrap; }
+  .box h4 { margin:0 0 6px; font-size:12px; color:var(--muted); text-transform:uppercase; }
+  pre { margin:0; max-height:360px; overflow:auto; background:#fafafa; padding:8px; border-radius:6px; font-size:11.5px; }
+  .gate { color:var(--bad); } .shots { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:12px; }
+  .shots img { width:100%; border:1px solid var(--line); border-radius:8px; }
+  a { color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🐕 dog-care-agent — 트레이스 뷰어</h1>
+  <p class="tag" id="tag">보호자의 말 한 줄과 사진 한 장을 받아, 근거 RAG와 피부 스크리닝 모델을 서브에이전트로 부리는 오케스트레이터. 모델이 말해도 되는 것을 코드가 정한다.</p>
+  <p>이 페이지는 <b>정적</b>이다 — 에이전트는 여기서 돌지 않는다. 대신 실제로 돌린 기록(트레이스)과 평가 결과를 그대로 올려 두었다.
+     코드는 <a href="https://github.com/gayeoniee/dog-care-agent">github.com/gayeoniee/dog-care-agent</a>.</p>
+
+  <h2>숫자</h2>
+  <div class="grid" id="stats"></div>
+
+  <h2>적대적 평가 — 게이트를 뚫으려는 질문에 실제 모델이 뭐라고 썼나</h2>
+  <p style="font-size:13px;color:var(--muted)">행을 누르면 첫 초안 · 걸린 게이트 · 최종 답 · 툴 호출을 볼 수 있다. 사진 경로는 지웠다.</p>
+  <table id="tbl"><thead><tr><th>질문</th><th>툴</th><th>첫 초안</th><th>결과</th><th>시간</th></tr></thead><tbody></tbody></table>
+
+  <h2>화면</h2>
+  <div class="shots" id="shots"></div>
+</div>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+const fmt = (ms) => ms == null ? "–" : (ms / 1000).toFixed(1) + "s";
+
+(async () => {
+  const idx = await fetch("data/index.json").then((r) => r.json());
+  if (idx.tagline) $("#tag").textContent = idx.tagline;
+
+  // ── 숫자
+  const stats = [];
+  const adv = idx.evals.adversarial ? await fetch("data/adversarial.json").then((r) => r.json()) : null;
+  const gates = idx.evals.gates ? await fetch("data/gates.json").then((r) => r.json()) : null;
+  const routing = idx.evals.routing ? await fetch("data/routing.json").then((r) => r.json()) : null;
+  if (adv) {
+    stats.push(["첫 초안이 게이트에 걸림", `${adv.first_pass_hit}/${adv.turns}`, "적대적 질문 · 실제 모델 출력"]);
+    stats.push(["고쳐 쓰기로 통과", adv.repaired, "위반 내용을 돌려주고 다시 쓰게"]);
+    stats.push(["코드가 조립", adv.composed, "두 번 걸리면 LLM 을 뺀다"]);
+    stats.push(["최종도 위반", adv.final_violations, "0 이어야 한다"]);
+  }
+  if (gates) stats.push(["게이트 단위 평가", `${gates.caught}/${gates.caught + gates.missed} · 헛걸림 ${gates.false_alarms}`, "손으로 쓴 위반 문장"]);
+  if (routing) stats.push(["라우팅 전 회차 통과", `${routing.passed}/${routing.total}`, `각 ${routing.repeats}회` + (routing.call_errors ? ` · 호출 오류 ${routing.call_errors} 제외` : "")]);
+  $("#stats").innerHTML = stats.map(([k, v, s]) => `<div class="stat"><span>${esc(k)}</span><b>${esc(v)}</b><span>${esc(s)}</span></div>`).join("");
+
+  // ── 트레이스 표
+  const tb = $("#tbl tbody");
+  for (const t of idx.traces) {
+    const first = t.first_pass_violations.length
+      ? `<span class="chip bad">걸림 ${t.first_pass_violations.map((v) => v.split(" ")[0]).join(" ")}</span>` : `<span class="chip ok">통과</span>`;
+    const res = t.blocked ? `<span class="chip bad">최종 위반</span>` : t.composed ? `<span class="chip warn">코드가 조립</span>` : t.repaired ? `<span class="chip ok">고쳐 써서 통과</span>` : `<span class="chip ok">통과</span>`;
+    const row = document.createElement("tr"); row.className = "row";
+    row.innerHTML = `<td>${esc(t.question)}${t.kind === "demo" ? ' <span class="chip">데모</span>' : ""}</td><td>${t.tools.map((x) => `<span class="chip">${esc(x)}</span>`).join("")}</td><td>${first}</td><td>${res}</td><td>${fmt(t.elapsed_ms)}</td>`;
+    const det = document.createElement("tr"); det.className = "detail"; det.innerHTML = `<td colspan="5">불러오는 중…</td>`;
+    row.onclick = async () => {
+      det.classList.toggle("open");
+      if (det.dataset.loaded) return; det.dataset.loaded = "1";
+      const tr = await fetch("data/traces/" + t.file).then((r) => r.json());
+      const calls = (tr.calls || []).map((c) => `▸ ${c.name}(${JSON.stringify(c.arguments)}) ${Math.round(c.elapsed_ms)}ms${c.error ? " — " + c.error : ""}`).join("\n");
+      det.innerHTML = `<td colspan="5"><div class="turn">
+        <div class="box"><h4>첫 초안이 걸린 것</h4>${tr.first_pass_violations?.length ? tr.first_pass_violations.map((v) => `<div class="gate">⛔ ${esc(v)}</div>`).join("") : "없음"}</div>
+        <div class="box"><h4>툴 호출</h4>${esc(calls) || "없음"}</div>
+        <div class="box" style="grid-column:1/-1"><h4>최종 답 ${tr.composed ? "(코드가 조립)" : tr.repaired ? "(고쳐 씀)" : ""}</h4>${esc(tr.answer)}</div>
+        <div class="box" style="grid-column:1/-1"><h4>전체 기록</h4><pre>${esc(JSON.stringify(tr, null, 2))}</pre></div>
+      </div></td>`;
+    };
+    tb.appendChild(row); tb.appendChild(det);
+  }
+
+  // ── 스크린샷
+  $("#shots").innerHTML = idx.shots.map((s) => `<figure style="margin:0"><img src="data/shots/${s}" alt="${esc(s)}"><figcaption style="font-size:12px;color:var(--muted)">${esc(s)}</figcaption></figure>`).join("");
+})();
+</script>
+</body>
+</html>

@@ -144,3 +144,48 @@ def test_잘못된_box는_거부한다(bad):
 
     with pytest.raises(SystemExit):
         _box(bad)
+
+
+# ── 앞 턴 판정을 다음 턴이 들고 간다 (B4) ─────────────────────
+def test_앞_턴_판정이_없으면_이어_묻기에서_게이트가_눈을_감는다():
+    """이게 B4 를 만든 이유다 — 사진 없는 턴은 screening 이 None 이라 G1·G7 이 안 돈다."""
+    f = _facts("그거 궤양이야?", None, [], get_settings())
+    assert f.screening is None
+
+
+def test_앞_턴_판정을_주면_이어_묻기도_게이트가_본다():
+    f = _facts("그거 궤양이야?", None, [], get_settings(), prior_screening=ABNORMAL_JSON)
+    assert f.screening is ABNORMAL_JSON and f.skin_related
+
+
+def test_이번_턴에_새_판정이_있으면_그게_이긴다():
+    new = {**ABNORMAL_JSON, "verdict": "normal"}
+    f = _facts("다시 봐줘", "b.jpg",
+               [ToolCall(name="screen_skin_photo", arguments={}, result=new)],
+               get_settings(), prior_screening=ABNORMAL_JSON)
+    assert f.screening is new
+
+
+class _NamerLLM:
+    """이어 묻기에 6종 이름으로 답하는 모델 — 앞 턴 판정이 실려 있으면 G1 이 잡아야 한다."""
+
+    def __init__(self) -> None:
+        self.n = 0
+
+    async def chat(self, messages, tools=None):
+        self.n += 1
+        if self.n == 1:
+            return {"role": "assistant", "content": "네, 궤양으로 보입니다."}
+        return {"role": "assistant", "content": "판정이 말한 계열까지만 말씀드릴 수 있습니다."}
+
+
+async def test_이어_묻기에서_6종_이름을_쓰면_잡힌다(monkeypatch):
+    import dogcare.loop as loop
+
+    monkeypatch.setattr(loop, "ToolCallingLLM", lambda settings: _NamerLLM())
+    agents = _FakeAgents()
+    turn = await run_turn("그거 궤양이야?", prior_screening=ABNORMAL_JSON,
+                          settings=get_settings(), sub=agents)         # type: ignore[arg-type]
+    assert turn.trace.first_pass_violations and turn.trace.first_pass_violations[0].startswith("G1")
+    assert turn.trace.repaired and turn.gates.ok
+    assert "궤양" not in turn.answer
