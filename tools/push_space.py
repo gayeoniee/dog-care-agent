@@ -76,7 +76,14 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--space", default=SPACE_ID)
+    ap.add_argument("--requirements-out", type=Path,
+                    help="Space 용 requirements.txt 만 이 경로에 쓰고 끝낸다 (CI 의 mcp 1.x 잡)")
     a = ap.parse_args()
+
+    if a.requirements_out:
+        a.requirements_out.write_text(_requirements(), encoding="utf-8")
+        print(a.requirements_out, "←", _requirements().replace("\n", " "))
+        return 0
 
     with tempfile.TemporaryDirectory() as tmp:
         stage = Path(tmp) / "space"
@@ -89,10 +96,16 @@ def main() -> int:
             return 0
 
         token = os.environ.get("HF_TOKEN")
-        llm_key = os.environ.get("LLM_API_KEY")
+        # ★ 데모용 키를 따로 둘 수 있다. 무료 티어는 **모델당 하루 500회**라, 평가를
+        #   돌린 날 저녁이면 같은 키를 쓰는 Space 도 429 로 죽는다(2026-09-22 실제로).
+        #   다른 Google Cloud 프로젝트의 키를 SPACE_LLM_API_KEY 에 두면 서로 안 먹는다.
+        llm_key = os.environ.get("SPACE_LLM_API_KEY") or os.environ.get("LLM_API_KEY")
         if not token or not llm_key:
-            print("HF_TOKEN 과 LLM_API_KEY 가 .env 에 있어야 합니다.", file=sys.stderr)
+            print("HF_TOKEN 과 LLM_API_KEY(또는 SPACE_LLM_API_KEY) 가 .env 에 있어야 합니다.",
+                  file=sys.stderr)
             return 2
+        print("Secret LLM_API_KEY ←", "SPACE_LLM_API_KEY" if os.environ.get("SPACE_LLM_API_KEY")
+              else "LLM_API_KEY (평가와 같은 키 — 쿼터를 나눠 쓴다)")
 
         from huggingface_hub import HfApi
 

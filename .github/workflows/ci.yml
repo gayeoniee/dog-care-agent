@@ -34,6 +34,26 @@ jobs:
         env:
           PYTHONUTF8: "1"
 
+  # HF Space 는 mcp 1.x 로 돈다 — 런타임의 gradio[mcp] 가 mcp<2 를 요구해서. 우리 lock 은
+  # 2.x 라, 1.x 호환층(_attr · FastMCP 폴백)이 깨져도 위의 test 잡은 모른다. Space 와 같은
+  # requirements 로 한 번 더 돈다.
+  space-runtime:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv run tools/push_space.py --requirements-out /tmp/space-req.txt
+      - run: >
+          uv run --no-project --with-requirements /tmp/space-req.txt
+          --with "pytest>=8" --with "pytest-asyncio>=0.23"
+          python -c "import importlib.metadata as m; v = m.version('mcp'); assert v.startswith('1.'), v; print('mcp', v)"
+      - run: >
+          uv run --no-project --with-requirements /tmp/space-req.txt
+          --with "pytest>=8" --with "pytest-asyncio>=0.23"
+          python -m pytest -q
+        env:
+          PYTHONUTF8: "1"
+
   # 데모 컨테이너가 실제로 빌드되고 뜨는지 (D1). 로컬에 Docker 데몬이 없어도 여기서 검증된다.
   docker:
     runs-on: ubuntu-latest

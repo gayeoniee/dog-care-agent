@@ -1,7 +1,8 @@
 """LLM-as-judge — **전달 충실도** (E2).
 
     uv run python evals/judge.py calibrate   # 판정기가 사람 라벨과 얼마나 맞나 (먼저)
-    uv run python evals/judge.py score       # 트레이스를 채점한다
+    uv run python evals/judge.py score       # 최신 적대적 회차의 트레이스만 채점한다
+    uv run python evals/judge.py score <폴더 | adversarial-*.json>   # 지정해서
 
 무엇을 재나
 -----------
@@ -171,12 +172,40 @@ async def calibrate() -> int:
     return 0 if rate >= 0.8 else 1
 
 
-async def score(directory: Path | None = None) -> int:
-    """트레이스 폴더를 채점한다. 기본은 적대적 평가 트레이스."""
-    d = directory or (OUT / "traces-adversarial")
-    files = sorted(d.glob("*.json"))
+def _files_of_run(run_json: Path) -> list[Path]:
+    """적대적 평가 결과 JSON 이 가리키는 **그 회차의** 트레이스만.
+
+    트레이스 폴더는 회차마다 쌓인다(47개 위에 다음 회차가 얹힌다). 폴더째 채점하면
+    옛 회차와 429 로 반쯤 죽은 회차까지 섞여 "이번 숫자" 가 아니게 된다.
+    """
+    d = OUT / "traces-adversarial"
+    data = json.loads(run_json.read_text(encoding="utf-8"))
+    names = [r["trace"] for row in data.get("rows", [])
+             for r in row.get("runs", []) if r.get("trace")]
+    if not names:
+        raise SystemExit(f"{run_json.name} 에 trace 필드가 없습니다 — 옛 형식. 폴더 경로를 주세요")
+    return [d / n for n in names if (d / n).exists()]
+
+
+async def score(target: Path | str | None = None) -> int:
+    """채점한다. `target` 은 트레이스 폴더, 적대적 결과 JSON, 또는 `latest`(최신 적대적 회차).
+
+    기본(`latest`)은 **최신 적대적 회차의 트레이스만** 본다 — 폴더째가 아니다.
+    """
+    target = target or "latest"
+    if target == "latest":
+        runs = sorted(OUT.glob("adversarial-*.json"))
+        if not runs:
+            print("적대적 평가 결과가 없습니다 — 먼저: uv run python evals/run.py adversarial")
+            return 2
+        files = _files_of_run(runs[-1])
+        print(f"회차: {runs[-1].name} · 트레이스 {len(files)}개")
+    elif Path(target).is_file():
+        files = _files_of_run(Path(target))
+    else:
+        files = sorted(Path(target).glob("*.json"))
     if not files:
-        print(f"{d} 에 트레이스가 없습니다")
+        print(f"{target} 에 트레이스가 없습니다")
         return 2
     base, model, key = _judge_endpoint()
     totals = {c: [0, 0] for c in CRITERIA}
@@ -198,7 +227,7 @@ async def score(directory: Path | None = None) -> int:
     for c in CRITERIA:
         ok, n = totals[c]
         print(f"  {c:<18} {ok}/{n}" + (f"  ({ok / n:.0%})" if n else ""))
-    _save("judge", {"model": model, "dir": str(d), "totals": totals, "rows": rows})
+    _save("judge", {"model": model, "target": str(target), "totals": totals, "rows": rows})
     return 0
 
 
@@ -214,6 +243,6 @@ if __name__ == "__main__":
     if cmd == "calibrate":
         raise SystemExit(asyncio.run(calibrate()))
     if cmd == "score":
-        raise SystemExit(asyncio.run(score(Path(sys.argv[2]) if len(sys.argv) > 2 else None)))
+        raise SystemExit(asyncio.run(score(sys.argv[2] if len(sys.argv) > 2 else None)))
     print(__doc__)
     raise SystemExit(2)

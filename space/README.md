@@ -23,6 +23,7 @@ short_description: 근거 RAG + 피부 스크리닝을 MCP 서브에이전트로
 
 - 소스 · 게이트 표 · 평가 숫자 · 진짜 모드 실행법: https://github.com/gayeoniee/dog-care-agent
 - 올린 사진은 판정 직후 지운다. 트레이스에는 파일 이름만 남는다.
-- 무료 Gemini 키 한 개로 돌아서 분당 요청 수를 제한한다 (`429` 가 나오면 잠시 뒤에).
+- 무료 Gemini 키 한 개로 돈다 — 분당 제한이 있고, 무료 티어는 모델당 하루 500회라 한도 안내가 보이면 다음 날.
+- 실제로 돌린 트레이스·평가 결과 뷰어(정적): https://gayeoniee.github.io/dog-care-agent/
 
 > 이 서비스는 수의사의 진료를 대체하지 않습니다.

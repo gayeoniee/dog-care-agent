@@ -40,7 +40,9 @@ class Settings:
     demo: bool = os.environ.get("DOGCARE_DEMO", "0") == "1"
 
     llm_base_url: str = os.environ.get("LLM_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai")
-    llm_model: str = os.environ.get("LLM_MODEL", "gemini-3.6-flash")
+    #: 기본은 3.1-flash-lite — 라우팅 27/30 · 적대적 47턴 · judge 98% 가 전부 이 모델 숫자다.
+    #: 3.6-flash 는 503(high demand)이 잦아 기본에서 뺐다 (.env.example 참고).
+    llm_model: str = os.environ.get("LLM_MODEL", "gemini-3.1-flash-lite")
     llm_api_key: str = os.environ.get("LLM_API_KEY", "")
     llm_temperature: float = float(os.environ.get("LLM_TEMPERATURE", "0.2"))
     #: 한 응답의 상한. **안 보내면 로컬 모델이 끝없이 생성한다** — granite4.1 이 한 요청에서

@@ -112,3 +112,18 @@ GitHub Pages 는 정적 파일만 서빙한다. 파이썬·토치·postgres 는 
     그 보고는 `gr.Blocks.launch` 훅이 보낸다 → gradio 를 안 띄우니 `startup_report()` 를 직접 부른다 (`space/app.py`)
   - 라이브 e2e: 요청 → SSE → 결과까지 돌았고, LLM 호출은 Gemini 일일 쿼터 429 (재측정 대기와 같은 원인)
 - [x] 공개 전환 — 사용자, 2026-09-22
+
+---
+
+# 3차 — 공개 뒤 손본 것 (2026-09-23, 쿼터 리셋을 기다리는 동안)
+
+- [x] **GitHub Pages 켬** — API 로 build_type=workflow, `pages.yml` 재실행 → https://gayeoniee.github.io/dog-care-agent/ 200
+- [x] **레포 메타** — homepage = Space, topics 8개
+- [x] **429 가 화면에 JSON 으로 찍히던 것** — `server.user_facing_error`: 한도·과부하·시간초과는 보호자 문장으로, 나머지는 첫 줄만. 테스트 1개
+- [x] **judge 가 트레이스 폴더째 채점하던 것** — 폴더는 회차마다 쌓인다(옛 47 + 반쯤 죽은 회차). 적대적 결과 JSON 에 회차별 `trace` 파일명을 남기고, `judge.py score` 기본이 **최신 회차만** 본다
+- [x] **CI 에 mcp 1.x 잡** — Space 런타임과 같은 requirements(`push_space.py --requirements-out`)로 pytest 한 번 더. 1.x 호환층이 깨지면 여기서 빨개진다
+- [x] **데모용 키 분리** — `SPACE_LLM_API_KEY` 가 있으면 Space Secret 은 그 키. 평가가 데모 쿼터를 안 먹는다
+- [x] **기본 모델을 실측한 모델로** — config·.env.example 기본값 3.6-flash → **3.1-flash-lite** (숫자가 전부 이 모델)
+- [x] **README 낡은 숫자** — 게이트 7 → 8(G8 행 추가), 테스트 114 → 120, Pages 링크, Space 가 48시간 뒤 잠든다는 안내
+
+남은 것은 그대로: 16:00 리셋 뒤 적대적 재측정 → `judge.py score`(이제 최신 회차만) → `freeze` → README 숫자.

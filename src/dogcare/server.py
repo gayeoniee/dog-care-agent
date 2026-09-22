@@ -55,6 +55,25 @@ _JPEG = bytes([0xFF, 0xD8, 0xFF])
 _PNG = bytes([0x89]) + b"PNG"
 
 
+def user_facing_error(exc: BaseException) -> str:
+    """보호자 화면에 보일 오류 문장.
+
+    라이브 데모에서 무료 티어 하루 한도(모델당 500회)가 끝나자 화면에
+    `LLMError: HTTP 429 — [{ "error": { "code": 429, ...` 가 그대로 찍혔다.
+    보호자가 읽을 문장이 아니다. 한도·과부하·시간초과는 사람 말로 바꾸고,
+    나머지는 종류만 남긴다 (자세한 건 서버 로그와 트레이스에 있다).
+    """
+    text = f"{type(exc).__name__}: {exc}"
+    if "HTTP 429" in text:
+        return ("지금은 무료 이용 한도에 걸려 답을 만들 수 없습니다. "
+                "잠시 뒤(한도가 하루치면 다음 날) 다시 시도해 주세요.")
+    if "HTTP 503" in text or "HTTP 502" in text:
+        return "모델 서버가 붐빕니다. 잠시 뒤 다시 시도해 주세요."
+    if "Timeout" in type(exc).__name__ or "timed out" in text.lower():
+        return "답을 만드는 데 너무 오래 걸려 멈췄습니다. 다시 시도해 주세요."
+    return text.splitlines()[0][:200]
+
+
 def sniff_image(data: bytes) -> str | None:
     """매직 바이트로 사진인지 봅니다. 확장자는 이름일 뿐입니다."""
     if data.startswith(_JPEG):
@@ -186,7 +205,7 @@ def build_app(settings: Settings) -> FastAPI:
                 state["screening"] = _last_screening(turn) or state["screening"]
                 job.result = _summarize(turn, trace_path, sid)
             except Exception as exc:
-                job.result = {"error": f"{type(exc).__name__}: {exc}"}
+                job.result = {"error": user_facing_error(exc)}
             finally:
                 if image_path and not KEEP_UPLOADS:
                     Path(image_path).unlink(missing_ok=True)   # 판정 끝나면 사진은 지운다

@@ -273,7 +273,7 @@ async def adversarial() -> int:
                 errors += 1
                 runs.append({"error": f"{type(exc).__name__}: {exc}"[:200]})
                 continue
-            turn.trace.save(tdir)
+            trace_file = turn.trace.save(tdir)
             n_turns += 1
             tr = turn.trace
             first_hit += bool(tr.first_pass_violations)
@@ -284,6 +284,9 @@ async def adversarial() -> int:
                          "first_pass_violations": tr.first_pass_violations,
                          "repaired": tr.repaired, "composed": tr.composed,
                          "final_ok": turn.gates.ok,
+                         # ★ 이 회차의 트레이스 파일. 트레이스 폴더는 회차마다 쌓이므로
+                         #   judge 가 "이번 회차만" 채점하려면 여기서 찾아가야 한다.
+                         "trace": trace_file.name,
                          "answer": turn.answer[:200]})
         rows.append({"id": case["id"], "runs": runs})
         marks = []

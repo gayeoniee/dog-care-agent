@@ -7,14 +7,16 @@
 ![MCP](https://img.shields.io/badge/MCP-stdio%20subagents-5A5AFF)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![uv](https://img.shields.io/badge/uv-managed-DE5FE9)
-![gates](https://img.shields.io/badge/safety%20gates-7-brightgreen)
+![gates](https://img.shields.io/badge/safety%20gates-8-brightgreen)
 ![ci](https://github.com/gayeoniee/dog-care-agent/actions/workflows/ci.yml/badge.svg)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 [![space](https://img.shields.io/badge/🤗%20Spaces-live%20demo-FFD21E)](https://huggingface.co/spaces/gayoniee/dog-care-agent)
 
 **▶ 라이브 데모: <https://huggingface.co/spaces/gayoniee/dog-care-agent>** — 데모 모드(스텁 서브에이전트).
 게이트·고쳐쓰기·조립·트레이스는 진짜와 같고, 상담 본문만 고정값이다. 무료 Gemini 키 하나로
-돌아서 분당 요청 수를 제한한다 — `429` 가 보이면 잠시 뒤에.
+돌아서 분당 요청 수를 제한한다 — 무료 티어는 모델당 하루 500회라, 한도 안내가 보이면 다음 날.
+48시간 아무도 안 쓰면 잠들고 첫 접속에 1~2분 걸린다(무료 ZeroGPU). 정적 쇼케이스(트레이스 뷰어·평가):
+<https://gayeoniee.github.io/dog-care-agent/>
 
 | | |
 |---|---|
@@ -58,7 +60,7 @@
 | | 흔한 툴콜링 에이전트 | 이 프로젝트 |
 |---|---|---|
 | 모델이 보는 것 | 툴 응답 전부 | **6종 이름이 실린 자리를 전부 뺀다** — 유혹을 프롬프트로 참게 하지 않는다 |
-| 안전 규칙 | 시스템 프롬프트 | **`gates.py` 7개** — 테스트 92개가 잡고 있다 |
+| 안전 규칙 | 시스템 프롬프트 | **`gates.py` 8개(G1~G8)** — 테스트 120개가 잡고 있다 |
 | 규칙이 깨졌을 때 | 모름 | 한 번 고쳐 쓰게 하고, 또 걸리면 **LLM을 빼고 코드가 조립** |
 | 의존성 | 한 venv에 전부 | **서브에이전트마다 자기 venv의 프로세스** (torch ↔ bge-m3 안 다툼) |
 | 하나가 죽으면 | 전부 안 뜸 | 나머지로 계속 — 무엇이 빠졌는지 답변에 적힌다 |
@@ -122,7 +124,7 @@ flowchart LR
     L -->|피부인데 사진 없음| P["사진 요청"]
     R --> G
     F --> G
-    S -->|6종 분포 제거| G{"게이트 5개"}
+    S -->|6종 분포 제거| G{"게이트 8개"}
     P --> G
     G -->|통과| A["답변"]
     G -->|위반| RW["위반 내용을 주고<br/>한 번 고쳐 쓰게"]
@@ -152,6 +154,7 @@ uv run --project ../dog-skin-screening --extra train python mcp_servers/skin_scr
 | **G5** | 사진 없이 피부를 판정 | RAG 코퍼스로도 그럴듯한 답은 나온다. 거기엔 이 보호자의 개가 없다 |
 | **G6** | 찾아보지 않고 "자료에 없다"고 함 | 코퍼스에 뭐가 있는지는 검색해 봐야 안다. **검색한 뒤의 거절은 정당하다** |
 | **G7** | 판정이 말하지 않은 계열을 말함 | `group`이 `null`(확신 낮음)이면 막대(`groups`)가 있어도 주장은 없다. 모델은 1등 막대를 읽고 단정한다 — **실제로 그랬다** |
+| **G8** | 판정의 긴급도를 바꿈 | abnormal 을 "괜찮아 보여요" 로, normal 을 이상처럼, 판정 못 한 사진(retake)에 판정을. 진료 권고는 게이트가 아니라 **코드가 붙인다** — 면책 속 "진료" 에 헛걸렸던 뒤로 |
 
 계열 넷(`솟아오른 변화` · `피부 표면·색·두께 변화` · `벗겨지거나 패인 상처` ·
 `깊거나 단단한 혹`)은 보호자 말이라 **6종과 글자가 하나도 안 겹친다.** 그래서
@@ -205,7 +208,7 @@ $ uv run dogcare ask "코 옆이 찢어진 것처럼 벌어졌어요 어떻게 �
 | 라우팅 (3회 전 회차 통과) | 15문항 **15/15** → 30문항으로 늘려 **27/30** (호출 오류 4회 제외) — 아래 참조 |
 | 적대적 평가 (실제 모델 · 2회 · 47턴) | 첫 초안이 게이트에 걸림 **4/24 → 1/23** (합 5/47) · 걸린 건 전부 고쳐 쓰기로 통과 · 조립 0 · **최종 위반 0** · 호출 오류 13 |
 | LLM-as-judge 보정 | 사람 라벨 13건과 **98%** 일치 (1회차 71% → 프롬프트·코드 수정) |
-| 단위 테스트 | **114** |
+| 단위 테스트 | **120** (mcp 2.x · Space 와 같은 mcp 1.x 둘 다 CI) |
 | RAG 코퍼스 | 612문서 · 9,768청크 · bge-m3(1024d) |
 | 피부 | 2단계 3팔 앙상블 · stage1 임계값 0.1466 |
 

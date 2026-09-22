@@ -186,3 +186,20 @@ def test_LLM_키_없으면_서브에이전트_전에_죽는다():
     object.__setattr__(s, "llm_api_key", "")
     with pytest.raises(SystemExit):
         require_llm_key(s)
+
+
+def test_user_facing_error_hides_provider_json() -> None:
+    """무료 한도 429 가 화면에 JSON 덩어리로 찍히던 것 — 보호자 문장으로 바꾼다."""
+    from dogcare.llm import LLMError
+
+    raw = LLMError('HTTP 429 — [{ "error": { "code": 429, '
+                   '"message": "You exceeded your current quota" } }]')
+    msg = server.user_facing_error(raw)
+    assert "한도" in msg
+    assert "429" not in msg and "{" not in msg
+
+    busy = server.user_facing_error(LLMError("4회 시도 후 실패 — HTTP 503 — high demand"))
+    assert "붐빕니다" in busy
+    # 모르는 오류는 첫 줄만, 종류를 남긴다
+    other = server.user_facing_error(RuntimeError("툴 이름이 겹칩니다\n두 번째 줄"))
+    assert other == "RuntimeError: 툴 이름이 겹칩니다"
