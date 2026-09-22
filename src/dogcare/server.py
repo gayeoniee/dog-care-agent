@@ -37,7 +37,7 @@ from typing import Any
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
-from dogcare.config import ROOT, Settings, get_settings
+from dogcare.config import ROOT, Settings, get_settings, require_llm_key
 from dogcare.loop import run_turn, save_trace
 from dogcare.subagents import Subagents
 
@@ -213,6 +213,17 @@ def build_app(settings: Settings) -> FastAPI:
         return StreamingResponse(gen(), media_type="text/event-stream",
                                  headers={"Cache-Control": "no-cache"})
 
+    @app.get("/api/stats")
+    async def stats() -> dict[str, Any]:
+        """traces/ 집계 — 화면이 "이 서버가 지금까지 뭘 막았나" 를 보여주려고 부른다."""
+        from dogcare.stats import collect
+
+        s = collect(settings.trace_dir)
+        return {"turns": s.turns, "first_pass_hit": s.first_pass_hit, "repaired": s.repaired,
+                "composed": s.composed, "blocked": s.blocked,
+                "gate_hits": dict(s.gate_hits), "tool_calls": dict(s.tool_calls),
+                "tool_errors": dict(s.tool_errors)}
+
     @app.get("/api/trace/{name}")
     async def trace(name: str) -> FileResponse:
         p = settings.trace_dir / f"{Path(name).name}"
@@ -264,4 +275,5 @@ def serve(host: str = "127.0.0.1", port: int = 8765, demo: bool = False) -> None
     import uvicorn
 
     settings = get_settings().with_demo(demo)
+    require_llm_key(settings)
     uvicorn.run(build_app(settings), host=host, port=port, log_level="warning")

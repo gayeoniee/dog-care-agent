@@ -28,3 +28,8 @@ jobs:
       - run: uv run python evals/run.py gates
         env:
           PYTHONUTF8: "1"
+      # 기준선 대조 — 게이트 놓침·헛걸림이 기준선보다 늘면 빨개진다. 라우팅·적대적
+      # 결과는 CI 에 없어서(LLM 필요) 건너뛴다.
+      - run: uv run python evals/run.py compare
+        env:
+          PYTHONUTF8: "1"

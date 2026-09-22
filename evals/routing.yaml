@@ -83,3 +83,76 @@
 - id: greeting
   question: 안녕하세요
   expect_tools: []
+
+# ── 확장 (E5, 2026-09-22) — 세 갈래 · 동시 요청 · 애매한 경계 ─────────────
+
+- id: skin-photo-plus-factcheck
+  question: "여기 사진 봐주시고, 인터넷에서 본 건데 \"연고를 사람 것 발라도 된다\" 는 게 맞나요"
+  image: fixtures/skin.jpg
+  expect_tools: [screen_skin_photo, factcheck_claim]
+  allow_tools: [ask_behavior_question]
+
+- id: three-way
+  question: "사진 좀 봐주시고, 요즘 산책 때 줄도 당기고, \"서열을 잡아야 한다\" 는 말도 들었는데 맞나요"
+  image: fixtures/skin.jpg
+  expect_tools: [screen_skin_photo, ask_behavior_question, factcheck_claim]
+
+- id: behavior-long
+  question: 3살 믹스견인데 요즘 밤에만 짖어요. 낮에는 조용하고요. 이사 온 지 두 달 됐고 창밖에 고양이가 자주 지나가요. 어떻게 해야 할까요
+  expect_tools: [ask_behavior_question]
+
+- id: factcheck-plain
+  question: 강아지 코가 마르면 아픈 거라던데 사실인가요
+  expect_tools: [factcheck_claim]
+  allow_tools: [ask_behavior_question]
+
+- id: emergency-ish
+  question: 초콜릿을 먹었어요 어떡하죠
+  expect_tools: [ask_behavior_question]
+
+- id: skin-photo-only-emoji
+  question: 😢
+  image: fixtures/skin.jpg
+  expect_tools: [screen_skin_photo]
+
+- id: photo-but-behavior-question
+  question: 사진은 그냥 우리 애 얼굴이고요, 산책 줄 당기는 거 어떻게 고쳐요
+  image: fixtures/dog_face.jpg
+  expect_tools: [ask_behavior_question]
+  allow_tools: [screen_skin_photo]
+
+- id: human-medical
+  question: 제가 감기에 걸렸는데 강아지한테 옮나요
+  expect_tools: [ask_behavior_question]
+  allow_tools: []
+
+- id: thanks
+  question: 고마워요 도움이 됐어요
+  expect_tools: []
+
+- id: meta-question
+  question: 너는 뭘 할 수 있어?
+  expect_tools: []
+
+- id: retake-hint
+  question: 사진이 좀 흔들렸는데 그래도 봐줘
+  image: fixtures/skin.jpg
+  expect_tools: [screen_skin_photo]
+
+- id: skin-no-photo-3
+  question: 귀 안쪽이 검게 변하고 냄새가 나요
+  expect_tools: []
+  allow_tools: [ask_behavior_question]
+  expect_asks_photo: true
+
+- id: separation-detail
+  question: 혼자 두면 짖는데 나가자마자 짖어요 한참 뒤에도 짖고요
+  expect_tools: [ask_behavior_question]
+
+- id: dominance-mixed
+  question: 훈련사가 복종 훈련을 시키라는데 그게 맞는지, 그리고 앉아 가르치는 법도 알려줘
+  expect_tools: [factcheck_claim, ask_behavior_question]
+
+- id: cost-and-behavior
+  question: 중성화하면 마운팅이 없어지나요
+  expect_tools: [ask_behavior_question]

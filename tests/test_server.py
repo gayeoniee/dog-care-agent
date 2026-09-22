@@ -169,3 +169,20 @@ def test_sniff_image():
     assert server.sniff_image(b"RIFF\x00\x00\x00\x00WEBPVP8 ") == "webp"
     assert server.sniff_image(b"GIF89a") is None
     assert server.sniff_image(b"RIFF\x00\x00\x00\x00WAVE") is None
+
+
+def test_stats_endpoint(client):
+    r = client.post("/api/ask", data={"question": "봐줘"},
+                    files={"image": ("x.jpg", JPEG, "image/jpeg")})
+    _result(client, r.json()["job_id"])
+    s = client.get("/api/stats").json()
+    assert s["turns"] >= 1 and "gate_hits" in s and s["tool_calls"].get("screen_skin_photo") == 1
+
+
+def test_LLM_키_없으면_서브에이전트_전에_죽는다():
+    from dogcare.config import Settings, require_llm_key
+
+    s = Settings()
+    object.__setattr__(s, "llm_api_key", "")
+    with pytest.raises(SystemExit):
+        require_llm_key(s)

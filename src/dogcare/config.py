@@ -78,3 +78,16 @@ class Settings:
 
 def get_settings() -> Settings:
     return Settings()
+
+
+def require_llm_key(settings: Settings) -> None:
+    """LLM 키가 없으면 **서브에이전트를 띄우기 전에** 멈춥니다.
+
+    전에는 MCP 서버 둘을 다 올린 뒤(진짜 모드면 bge-m3 와 가중치까지) 첫 LLM 호출에서
+    "LLM_API_KEY 가 비어 있습니다" 로 죽었다. 30초~수 분을 버리고 나서야 알려 주는 셈이다.
+    """
+    if not settings.llm_api_key:
+        raise SystemExit(
+            "LLM_API_KEY 가 비어 있습니다 — .env 를 확인하세요." + "\n"
+            "  Gemini 무료 티어: https://aistudio.google.com/apikey" + "\n"
+            "  로컬 Ollama 면:   LLM_BASE_URL=http://localhost:11434/v1  LLM_API_KEY=ollama")

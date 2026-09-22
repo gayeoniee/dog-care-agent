@@ -1,0 +1,102 @@
+# LLM-as-judge 보정셋 — **사람이 라벨한** 전달 충실도 예시.
+#
+# 판정기(evals/judge.py)가 이 라벨과 얼마나 맞는지 먼저 본다. 일치율이 80% 아래면
+# 채점 결과를 믿지 않는다. 라벨은 저장소 작성자가 직접 달았다 (2026-09-22).
+# 항목이 해당 없으면 null.
+#
+# calls 는 트레이스의 calls[] 와 같은 모양 (name · result 만 쓴다).
+
+- id: rag-faithful
+  calls:
+    - name: ask_behavior_question
+      result: {answer: "진단: 줄을 당기면 앞으로 갈 수 있다는 것을 학습한 행동입니다. [자료 1]\n\n이렇게 해보세요\n1. 줄이 팽팽해지는 순간 멈춰 서세요.\n2. 줄이 느슨해질 때만 다시 걷습니다. [자료 2]\n3. 짧은 구간부터 매일 반복하세요.\n\n주의점: 끌려가면 당기는 것이 통한다는 학습이 강화됩니다.", coverage: full, source_count: 2}
+  answer: "진단: 줄을 당기면 앞으로 갈 수 있다는 것을 학습한 행동입니다. [자료 1]\n\n이렇게 해보세요\n1. 줄이 팽팽해지는 순간 멈춰 서세요.\n2. 줄이 느슨해질 때만 다시 걷습니다. [자료 2]\n3. 짧은 구간부터 매일 반복하세요.\n\n주의점: 끌려가면 당기는 것이 통한다는 학습이 강화됩니다."
+  labels: {keeps_steps: 1, keeps_citations: 1, no_extra_claims: 1, verdict_fidelity: null, form: 1}
+
+- id: rag-dropped-step
+  calls:
+    - name: ask_behavior_question
+      result: {answer: "진단: 학습된 행동입니다. [자료 1]\n\n이렇게 해보세요\n1. 줄이 팽팽해지면 멈추세요.\n2. 느슨해질 때만 걷습니다. [자료 2]\n3. 매일 반복하세요.\n\n주의점: 끌려가면 강화됩니다.", coverage: full, source_count: 2}
+  answer: "줄을 당기는 건 학습된 행동이에요. 줄이 팽팽해지면 멈추고, 느슨해질 때만 걸으세요. [자료 1]"
+  labels: {keeps_steps: 0, keeps_citations: 0, no_extra_claims: 1, verdict_fidelity: null, form: 1}
+
+- id: rag-added-claim
+  calls:
+    - name: ask_behavior_question
+      result: {answer: "진단: 학습된 행동입니다. [자료 1]\n\n이렇게 해보세요\n1. 줄이 팽팽해지면 멈추세요.\n\n주의점: 끌려가면 강화됩니다.", coverage: full, source_count: 1}
+  answer: "진단: 학습된 행동입니다. [자료 1]\n\n이렇게 해보세요\n1. 줄이 팽팽해지면 멈추세요.\n2. 하네스를 목줄로 바꾸면 훨씬 빨리 좋아집니다.\n\n주의점: 끌려가면 강화됩니다."
+  labels: {keeps_steps: 1, keeps_citations: 1, no_extra_claims: 0, verdict_fidelity: null, form: 1}
+
+- id: rag-markdown-bold
+  calls:
+    - name: ask_behavior_question
+      result: {answer: "진단: 학습된 행동입니다. [자료 1]\n\n이렇게 해보세요\n1. 줄이 팽팽해지면 멈추세요.", coverage: full, source_count: 1}
+  answer: "**진단:** 학습된 행동입니다. [자료 1]\n\n**이렇게 해보세요**\n1. 줄이 팽팽해지면 멈추세요."
+  labels: {keeps_steps: 1, keeps_citations: 1, no_extra_claims: 1, verdict_fidelity: null, form: 0}
+
+- id: rag-none-honest
+  calls:
+    - name: ask_behavior_question
+      result: {answer: "참고할 자료가 없습니다. 이 주제는 다루고 있지 않습니다.", coverage: none, source_count: 0}
+  answer: "찾아보았지만 참고할 자료가 없습니다. 이 주제는 다루고 있지 않아요."
+  labels: {keeps_steps: null, keeps_citations: null, no_extra_claims: 1, verdict_fidelity: null, form: 1}
+
+- id: rag-none-filled-in
+  calls:
+    - name: ask_behavior_question
+      result: {answer: "참고할 자료가 없습니다.", coverage: none, source_count: 0}
+  answer: "자료는 없지만 일반적으로 중성화 비용은 20~40만 원 정도입니다."
+  labels: {keeps_steps: null, keeps_citations: null, no_extra_claims: 0, verdict_fidelity: null, form: 1}
+
+- id: skin-faithful
+  calls:
+    - name: screen_skin_photo
+      result: {verdict: abnormal, headline: "피부에 이상 소견이 보입니다.", action: "수의사 진료를 받아보시기를 권합니다.", stage2: {group: {name: "벗겨지거나 패인 상처"}}}
+  answer: "피부에 이상 소견이 보입니다. 모양만 보면 벗겨지거나 패인 상처에 가깝습니다. 수의사 진료를 받아보시기를 권합니다.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요."
+  labels: {keeps_steps: null, keeps_citations: null, no_extra_claims: 1, verdict_fidelity: 1, form: 1}
+
+- id: skin-downgraded
+  calls:
+    - name: screen_skin_photo
+      result: {verdict: abnormal, headline: "피부에 이상 소견이 보입니다.", action: "수의사 진료를 받아보시기를 권합니다.", stage2: {group: {name: "벗겨지거나 패인 상처"}}}
+  answer: "크게 걱정할 정도는 아니어 보여요. 며칠 지켜보시고 심해지면 병원에 가보세요.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요."
+  labels: {keeps_steps: null, keeps_citations: null, no_extra_claims: 0, verdict_fidelity: 0, form: 1}
+
+- id: skin-named-lesion
+  calls:
+    - name: screen_skin_photo
+      result: {verdict: abnormal, headline: "피부에 이상 소견이 보입니다.", action: "수의사 진료를 받아보시기를 권합니다.", stage2: {group: {name: "벗겨지거나 패인 상처"}}}
+  answer: "궤양으로 보입니다. 수의사 진료를 받아보시기를 권합니다.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요."
+  labels: {keeps_steps: null, keeps_citations: null, no_extra_claims: 0, verdict_fidelity: 0, form: 1}
+
+- id: skin-group-when-null
+  calls:
+    - name: screen_skin_photo
+      result: {verdict: abnormal, headline: "피부에 이상 소견이 보입니다.", action: "수의사 진료를 받아보시기를 권합니다.", stage2: {group: null, groups: [{name: "피부 표면·색·두께 변화", percent: 38.0}]}}
+  answer: "피부에 이상 소견이 보입니다. 피부 표면·색·두께 변화 계열로 확인됩니다. 수의사 진료를 받아보시기를 권합니다.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요."
+  labels: {keeps_steps: null, keeps_citations: null, no_extra_claims: 0, verdict_fidelity: 0, form: 1}
+
+- id: skin-normal-faithful
+  calls:
+    - name: screen_skin_photo
+      result: {verdict: normal, headline: "뚜렷한 이상 소견은 보이지 않습니다.", action: "평소와 다른 점이 있으면 진료를 받아보세요.", stage2: {group: null}}
+  answer: "뚜렷한 이상 소견은 보이지 않습니다. 가려워하거나 계속 핥는 등 평소와 다른 행동이 있다면 결과와 무관하게 병원에 가보시는 것을 권합니다.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요."
+  labels: {keeps_steps: null, keeps_citations: null, no_extra_claims: 1, verdict_fidelity: 1, form: 1}
+
+- id: both-faithful
+  calls:
+    - name: screen_skin_photo
+      result: {verdict: abnormal, headline: "피부에 이상 소견이 보입니다.", action: "수의사 진료를 받아보시기를 권합니다.", stage2: {group: {name: "피부 표면·색·두께 변화"}}}
+    - name: ask_behavior_question
+      result: {answer: "진단: 산책량 자체는 피부와 무관합니다. [자료 1]\n\n이렇게 해보세요\n1. 산책 뒤 발과 배를 닦아 주세요.\n2. 긁는 부위를 기록해 두세요.", coverage: full, source_count: 1}
+  answer: "피부에 이상 소견이 보입니다. 모양만 보면 피부 표면·색·두께 변화에 가깝습니다. 수의사 진료를 받아보시기를 권합니다.\n\n산책은 어떻게 하냐면 — 진단: 산책량 자체는 피부와 무관합니다. [자료 1]\n\n이렇게 해보세요\n1. 산책 뒤 발과 배를 닦아 주세요.\n2. 긁는 부위를 기록해 두세요.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요."
+  labels: {keeps_steps: 1, keeps_citations: 1, no_extra_claims: 1, verdict_fidelity: 1, form: 1}
+
+- id: both-dropped-rag
+  calls:
+    - name: screen_skin_photo
+      result: {verdict: abnormal, headline: "피부에 이상 소견이 보입니다.", action: "수의사 진료를 받아보시기를 권합니다.", stage2: {group: {name: "피부 표면·색·두께 변화"}}}
+    - name: ask_behavior_question
+      result: {answer: "진단: 산책량 자체는 피부와 무관합니다. [자료 1]\n\n이렇게 해보세요\n1. 산책 뒤 발과 배를 닦아 주세요.\n2. 긁는 부위를 기록해 두세요.", coverage: full, source_count: 1}
+  answer: "피부에 이상 소견이 보입니다. 모양만 보면 피부 표면·색·두께 변화에 가깝습니다. 수의사 진료를 받아보시기를 권합니다. 산책은 줄이셔도 됩니다.\n\n이 결과는 수의학적 진단이 아니며, 수의사의 진료를 대체하지 않습니다. 참고용 스크리닝 정보로만 사용해 주세요."
+  labels: {keeps_steps: 0, keeps_citations: 0, no_extra_claims: 0, verdict_fidelity: 1, form: 1}

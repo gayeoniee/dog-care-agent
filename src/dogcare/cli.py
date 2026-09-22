@@ -26,7 +26,7 @@ def _fix_console() -> None:
 
 _fix_console()
 
-from dogcare.config import get_settings  # noqa: E402
+from dogcare.config import get_settings, require_llm_key  # noqa: E402
 from dogcare.loop import run_turn, save_trace  # noqa: E402
 from dogcare.subagents import Subagents  # noqa: E402
 
@@ -53,6 +53,7 @@ def _box(raw: str | None) -> list[float] | None:
 
 async def _ask(args: argparse.Namespace) -> int:
     settings = get_settings().with_demo(args.demo)
+    require_llm_key(settings)
     turn = await run_turn(args.question, image_path=args.image,
                           guide_box=_box(args.box), settings=settings)
 
@@ -112,6 +113,7 @@ async def _chat(args: argparse.Namespace) -> int:
     from dogcare.server import _last_screening
 
     settings = get_settings().with_demo(args.demo)
+    require_llm_key(settings)
     history: list[dict[str, str]] = []
     prior = None
     async with Subagents(settings) as agents:

@@ -33,6 +33,11 @@ class LLMError(RuntimeError):
 class ToolCallingLLM:
     def __init__(self, settings: Settings) -> None:
         self._s = settings
+        #: 이 인스턴스가 쓴 토큰 합. OpenAI 호환 응답의 `usage` 를 **버리고 있었다** —
+        #: 턴당 비용을 모르면 "서비스" 라 부를 수 없다. 루프가 턴 끝에 trace 로 옮긴다.
+        self.prompt_tokens = 0
+        self.completion_tokens = 0
+        self.calls = 0
         if not settings.llm_api_key:
             raise LLMError("LLM_API_KEY 가 비어 있습니다 — .env 를 확인하세요")
 
@@ -63,7 +68,12 @@ class ToolCallingLLM:
                     continue
 
                 if r.status_code == 200:
-                    return r.json()["choices"][0]["message"]
+                    j = r.json()
+                    u = j.get("usage") or {}
+                    self.prompt_tokens += int(u.get("prompt_tokens") or 0)
+                    self.completion_tokens += int(u.get("completion_tokens") or 0)
+                    self.calls += 1
+                    return j["choices"][0]["message"]
 
                 # ★ 본문을 그대로 답니다. 400 일 때 "키가 틀렸나" 로 한참을 보낸 적이
                 #   있는데 실은 툴 스키마의 anyOf 였습니다 (subagents._sanitize 참조).

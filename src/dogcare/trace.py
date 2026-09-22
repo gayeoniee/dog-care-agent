@@ -48,6 +48,10 @@ class Trace:
     #: 이 턴에 **붙지 않은** 서브에이전트와 그 이유. 하나가 죽어도 나머지로 답하는데,
     #: 무엇이 빠진 채 답했는지는 기록과 화면에 적혀야 한다.
     subagent_failures: dict[str, str] = field(default_factory=dict)
+    #: 이 턴이 LLM 에 쓴 토큰. 비용은 모델 단가 × 이것 — 단가는 여기 안 둔다(바뀐다).
+    llm_calls: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
     elapsed_ms: float = 0.0
 
     def add(self, call: ToolCall) -> ToolCall:

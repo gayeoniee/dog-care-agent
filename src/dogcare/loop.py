@@ -267,6 +267,9 @@ async def run_turn(question: str, image_path: str | None = None,
             report = check(answer, facts)
 
         trace.answer = answer
+        trace.llm_calls = getattr(llm, "calls", 0)
+        trace.prompt_tokens = getattr(llm, "prompt_tokens", 0)
+        trace.completion_tokens = getattr(llm, "completion_tokens", 0)
         trace.subagent_failures = dict(getattr(agents, "failed", {}) or {})
         trace.composed = composed
         trace.violations = [str(v) for v in report.violations]

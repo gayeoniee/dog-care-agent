@@ -4,6 +4,8 @@
     uv run python evals/run.py routing    # 어떤 툴을 골랐나 (LLM 필요, DB·가중치 불필요)
     uv run python evals/run.py gates      # 게이트가 잡나 (LLM 불필요, 결정론적)
     uv run python evals/run.py adversarial  # 실제 모델이 유혹받을 때 게이트가 걸리나 (LLM)
+    uv run python evals/run.py freeze     # 최신 결과를 기준선(evals/baseline.json)으로
+    uv run python evals/run.py compare    # 최신 결과가 기준선보다 나빠졌나
 
 왜 나눠 재나
 ------------
@@ -309,6 +311,78 @@ async def adversarial() -> int:
     return 0 if final_bad == 0 else 1
 
 
+#: 기준선 — `compare` 가 대조하는 숫자. `freeze` 가 최신 결과로 갱신한다.
+BASELINE = HERE / "baseline.json"
+
+
+def _summary_of(kind: str, d: dict) -> dict:
+    if kind == "routing":
+        return {"passed": d["passed"], "total": d["total"]}
+    if kind == "gates":
+        return {"caught": d["caught"], "missed": d["missed"], "false_alarms": d["false_alarms"]}
+    if kind == "adversarial":
+        return {"turns": d["turns"], "first_pass_hit": d["first_pass_hit"],
+                "final_violations": d["final_violations"], "composed": d["composed"]}
+    return {}
+
+
+def _latest_results() -> dict[str, dict]:
+    out = {}
+    for kind in ("routing", "gates", "adversarial"):
+        xs = sorted(OUT.glob(f"{kind}-*.json"))
+        if xs:
+            out[kind] = _summary_of(kind, json.loads(xs[-1].read_text(encoding="utf-8")))
+    return out
+
+
+async def freeze() -> int:
+    """최신 결과를 기준선으로 얼린다. **좋아졌을 때만** 얼리는 게 규칙이다."""
+    cur = _latest_results()
+    BASELINE.write_text(json.dumps(cur, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"기준선 갱신 -> {BASELINE}")
+    for k, v in cur.items():
+        print(f"  {k:<12} {v}")
+    return 0
+
+
+async def compare() -> int:
+    """최신 결과를 기준선과 대조한다. **나빠진 게 있으면 1 로 끝난다.**
+
+    평가 JSON 이 쌓이기만 하고 "전보다 나빠졌나" 를 아무도 안 봤다. 숫자는 비교
+    대상이 있어야 숫자다. 라우팅은 통과 수, 게이트는 놓침·헛걸림, 적대적은 최종 위반.
+    (적대적 발동률은 회차마다 흔들리므로 나빠짐으로 안 센다 — 최종 위반만 본다.)
+    """
+    if not BASELINE.exists():
+        print("기준선이 없습니다. 먼저: uv run python evals/run.py freeze")
+        return 2
+    base = json.loads(BASELINE.read_text(encoding="utf-8"))
+    cur = _latest_results()
+    worse = []
+    for kind, b in base.items():
+        c = cur.get(kind)
+        if not c:
+            print(f"~  {kind:<12} 최신 결과 없음")
+            continue
+        if kind == "routing" and c["passed"] < b["passed"]:
+            worse.append(f"routing 통과 {b['passed']} -> {c['passed']}")
+        if kind == "gates" and (c["missed"] > b["missed"] or c["false_alarms"] > b["false_alarms"]):
+            worse.append(f"gates 놓침 {b['missed']}->{c['missed']} · 헛걸림 "
+                         f"{b['false_alarms']}->{c['false_alarms']}")
+        if kind == "adversarial" and c["final_violations"] > b["final_violations"]:
+            worse.append(f"adversarial 최종 위반 {b['final_violations']} "
+                         f"-> {c['final_violations']}")
+        mark = "X " if any(w.startswith(kind) for w in worse) else "OK"
+        print(f"{mark} {kind:<12} 기준 {b}  ->  최신 {c}")
+    print()
+    if worse:
+        print("나빠진 것:")
+        for w in worse:
+            print("  -", w)
+        return 1
+    print("기준선보다 나빠진 것 없음")
+    return 0
+
+
 def _save(name: str, payload: dict) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     p = OUT / f"{name}-{time.strftime('%Y%m%d-%H%M%S')}.json"
@@ -318,7 +392,8 @@ def _save(name: str, payload: dict) -> None:
 
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "gates"
-    fn = {"record": record, "routing": routing, "gates": gates, "adversarial": adversarial}.get(cmd)
+    fn = {"record": record, "routing": routing, "gates": gates, "adversarial": adversarial,
+          "freeze": freeze, "compare": compare}.get(cmd)
     if fn is None:
         print(__doc__)
         raise SystemExit(2)

@@ -1,0 +1,13 @@
+.venv
+.git
+.github
+traces
+uploads
+evals/out
+site
+docs
+tests
+.env
+.env.*
+!.env.example
+__pycache__

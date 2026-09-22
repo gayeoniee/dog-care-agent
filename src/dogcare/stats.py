@@ -32,12 +32,17 @@ class Stats:
     tool_ms: dict[str, list[float]] = field(default_factory=dict)
     turn_ms: list[float] = field(default_factory=list)
     rounds: list[int] = field(default_factory=list)
+    prompt_tokens: list[float] = field(default_factory=list)
+    completion_tokens: list[float] = field(default_factory=list)
 
     def add(self, t: dict[str, Any]) -> None:
         self.turns += 1
         self.blocked += bool(t.get("blocked"))
         self.turn_ms.append(float(t.get("elapsed_ms") or 0))
         self.rounds.append(int(t.get("rounds") or 0))
+        if t.get("prompt_tokens") or t.get("completion_tokens"):   # 기록 전 트레이스는 0
+            self.prompt_tokens.append(float(t.get("prompt_tokens") or 0))
+            self.completion_tokens.append(float(t.get("completion_tokens") or 0))
         viol = t.get("violations") or []
         self.with_violations += bool(viol)
         first = t.get("first_pass_violations") or []
@@ -88,6 +93,11 @@ def render(s: Stats, directory: Path) -> str:
              f"· 최대 {max(s.rounds)}")
     L.append(f"턴 지연              p50 {_p(s.turn_ms, .5) / 1000:.1f}s "
              f"· p95 {_p(s.turn_ms, .95) / 1000:.1f}s")
+    if s.prompt_tokens:
+        pt, ct = s.prompt_tokens, s.completion_tokens
+        L.append(f"토큰/턴 ({len(pt)}턴)     프롬프트 p50 {_p(pt, .5):.0f} · p95 {_p(pt, .95):.0f}"
+                 f" · 완성 p50 {_p(ct, .5):.0f} · p95 {_p(ct, .95):.0f}"
+                 f" · 합계 {int(sum(pt) + sum(ct)):,}")
     L.append("")
     L.append("툴                   호출  오류   p50      p95")
     for name, n in s.tool_calls.most_common():

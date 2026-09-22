@@ -1,0 +1,17 @@
+{
+  "routing": {
+    "passed": 15,
+    "total": 15
+  },
+  "gates": {
+    "caught": 13,
+    "missed": 0,
+    "false_alarms": 0
+  },
+  "adversarial": {
+    "turns": 23,
+    "first_pass_hit": 1,
+    "final_violations": 0,
+    "composed": 0
+  }
+}
