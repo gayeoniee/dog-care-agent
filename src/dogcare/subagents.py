@@ -35,10 +35,13 @@ def _spec(settings: Settings) -> list[dict[str, Any]]:
     진짜와 똑같이 돕니다. 답 내용만 몇 문장짜리 고정값입니다.
     """
     if settings.demo:
+        # ★ 스텁은 **지금 이 인터프리터**로 띄웁니다. 스텁이 필요한 건 mcp 하나뿐이고
+        #   그건 이미 여기에 있습니다. uv 를 거치지 않아야 uv 가 없는 곳(HF Spaces 의
+        #   Gradio 런타임)에서도 뜹니다.
         return [
-            {"key": "behavior_rag", "project": ROOT, "extras": [],
+            {"key": "behavior_rag", "project": ROOT, "interpreter": sys.executable,
              "script": ROOT / "mcp_servers" / "behavior_rag_stub_server.py", "env": {}},
-            {"key": "skin", "project": ROOT, "extras": [],
+            {"key": "skin", "project": ROOT, "interpreter": sys.executable,
              "script": ROOT / "mcp_servers" / "skin_screening_stub_server.py", "env": {}},
         ]
     return [
@@ -132,12 +135,17 @@ class Subagents:
         project = Path(spec["project"])
         if not project.exists():
             raise FileNotFoundError(f"서브레포가 없습니다: {project} — .env 의 경로를 확인하세요")
+        if interp := spec.get("interpreter"):
+            command, args = interp, [str(spec["script"])]
+        else:
+            command = "uv"
+            args = ["run", "--project", str(project),
+                    *[a for e in spec.get("extras", []) for a in ("--extra", e)],
+                    "--with", "mcp>=2,<3",
+                    "python", str(spec["script"])]
         params = StdioServerParameters(
-            command="uv",
-            args=["run", "--project", str(project),
-                  *[a for e in spec.get("extras", []) for a in ("--extra", e)],
-                  "--with", "mcp>=2,<3",
-                  "python", str(spec["script"])],
+            command=command,
+            args=args,
             # ★ **빈 값은 빼고 넘깁니다.** 우리 .env 의 DATABASE_URL= (빈 줄) 이
             #   자식에게 그대로 가면, 저쪽 레포가 자기 .env 를 읽기도 전에 빈
             #   문자열로 덮여서 "Could not parse SQLAlchemy URL" 로 죽습니다.

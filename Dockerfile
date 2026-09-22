@@ -6,7 +6,9 @@
 #   docker build -t dog-care-agent .
 #   docker run -p 8765:8765 -e LLM_API_KEY=... dog-care-agent
 #
-# HF Spaces(Docker) 에 그대로 올라간다: Secrets 에 LLM_API_KEY, 포트 7860.
+# HF Spaces 에는 이 이미지를 쓰지 않는다 — Docker SDK 가 유료로 잠겨 있다(2026-09).
+# 라이브 데모는 Gradio SDK 위에서 `space/app.py` 로 뜬다: `uv run tools/push_space.py`.
+# PORT 를 읽는 건 그때의 흔적이자, 다른 PaaS 에 올릴 때를 위해 남겨 둔다.
 #   docker run -p 7860:7860 -e PORT=7860 -e LLM_API_KEY=... dog-care-agent
 
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim

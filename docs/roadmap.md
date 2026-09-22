@@ -94,10 +94,12 @@ GitHub Pages 는 정적 파일만 서빙한다. 파이썬·토치·postgres 는 
 - [ ] 적대적 20×3 Gemini 재측정 (쿼터) → `freeze` 로 기준선 갱신
 - [ ] Gemini 판정기로 적대적 트레이스 채점 (쿼터)
 - [x] 로컬 모델 최종 선택 — **qwen3:8b (8K 변형 `qwen3-8k`)**, 사용자 선택 2026-09-22. `.env.example` (B) 블록
-- [ ] D2 HF Spaces 라이브 데모 — **공개 전환과 함께** (사용자 결정). 절차:
-  1. huggingface.co/new-space → SDK **Docker** · Public · 이름 `dog-care-agent`
-  2. Settings → Variables and secrets → **Secret** `LLM_API_KEY` (Gemini). 나머지는 Dockerfile 의 ENV 가 정한다 (`DOGCARE_DEMO=1`, `RATE_PER_MIN=6`)
-  3. `git remote add space https://huggingface.co/spaces/gayoniee/dog-care-agent && git push space main`
-     — Dockerfile 이 루트에 있고 `PORT` 를 읽으므로 그대로 뜬다 (Spaces 는 7860)
-  4. 뜨면 README 상단에 Space 링크. 무료 CPU 로 충분하다 — 스텁이라 가중치·DB 가 없다
-- [ ] 공개 전환 — 사용자
+- [ ] D2 HF Spaces 라이브 데모 — 공개 전환(2026-09-22 완료)과 함께. **Docker SDK 가 유료로
+  잠겨 있어서**(new-space 화면에 Paid 배지) 계획을 바꿨다 — **Gradio SDK 위에 FastAPI 를 그대로**
+  띄운다. Gradio 런타임은 `python app.py` 를 돌리고 7860 이 열리길 기다릴 뿐이다. 절차:
+  1. HF 토큰에 **쓰기 권한** — fine-grained 면 "Write access to contents/settings of all repos
+     under your personal namespace". 지금 토큰(`DAENGS_APP`)은 릴리스 모델 읽기뿐이라 403
+  2. `uv run tools/push_space.py` — Space 생성 · Secret `LLM_API_KEY` · Variables · 업로드까지 한 번에.
+     `space/app.py` + `space/README.md`(YAML 머리말) + `src/` + 스텁 둘 + `uv export` 한 requirements.txt 만 올린다
+  3. 뜨면 README 상단에 Space 링크. 무료 CPU 로 충분하다 — 스텁이라 가중치·DB 가 없다
+- [x] 공개 전환 — 사용자, 2026-09-22
