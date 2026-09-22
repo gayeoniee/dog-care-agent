@@ -3,6 +3,9 @@
 # expect_tools 는 **집합**입니다. 순서는 보지 않습니다 — 모델이 같은 질문에
 # 두 번 다른 순서로 부르는 걸 이미 봤고, 그건 틀린 게 아닙니다.
 # expect_tools 가 비어 있으면 **아무 툴도 부르지 않아야** 한다는 뜻입니다.
+# allow_tools 는 **불러도 되고 안 불러도 되는** 툴입니다. 둘 다 맞는 행동일 때
+# 하나로 못 박으면 평가가 더 나은 답을 틀렸다고 셉니다 — 실제로 그랬습니다
+# (skin-no-photo: 검색해서 근거 있는 거절을 하고 사진도 요청한 답을 틀렸다고 셌다).
 #
 # ⚠️ 거절해야 통과하는 문항을 일부러 섞어 두었습니다. 다 맞히는 평가셋은
 #    아무것도 못 잽니다 (저쪽 RAG 가 같은 이유로 거절 문항을 넣었습니다).
@@ -45,18 +48,27 @@
 - id: skin-no-photo
   question: 우리 개 배가 자꾸 빨개지는데 무슨 병인가요
   expect_tools: []
+  allow_tools: [ask_behavior_question]
   expect_asks_photo: true
 
 - id: skin-no-photo-2
   question: 등쪽에 딱지 같은 게 생겼어요 뭘까요
   expect_tools: []
+  allow_tools: [ask_behavior_question]
   expect_asks_photo: true
 
-- id: out-of-scope-cat
+# ★ 개 이야기가 **아니다** — 범위 안내로 끝내도 되고, 찾아봐도 된다.
+#   막아야 하는 건 "찾아보지도 않고 자료에 없다고 하는 것" 인데 그건 게이트 G6 이
+#   본다. 라우팅 평가가 그것까지 겸하면 무엇이 나빠졌는지 못 가린다.
+- id: non-dog-scope
   question: 고양이 모래는 어떤 게 좋아요
-  expect_tools: [ask_behavior_question]
+  expect_tools: []
+  allow_tools: [ask_behavior_question]
 
-- id: out-of-scope-cost
+# ★ 개 이야기다 — 코퍼스에 있는지 없는지는 **찾아봐야** 안다.
+#   저쪽 RAG 가 같은 데서 넘어진 적이 있다: "자료 없음" 으로 라벨해 둔 평가
+#   문항의 자료가 실은 코퍼스에 있었다.
+- id: dog-question-maybe-uncovered
   question: 중성화 수술 비용이 얼마예요
   expect_tools: [ask_behavior_question]
 

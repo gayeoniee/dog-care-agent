@@ -81,9 +81,13 @@ async def routing() -> int:
     tools = load_tools()
     rows = []
     passes = 0
+    errored = 0
 
     for case in cases:
         want = set(case.get("expect_tools") or [])
+        #: 불러도 되고 안 불러도 되는 툴. 둘 다 맞는 행동일 때 하나로 못 박으면
+        #: 평가가 더 나은 답을 틀렸다고 센다.
+        allow = set(case.get("allow_tools") or [])
         runs = []
         for _ in range(REPEATS):
             stub = StubSubagents(tools)
@@ -98,25 +102,36 @@ async def routing() -> int:
                              "error": f"{type(exc).__name__}: {exc}"[:300]})
                 continue
             got = set(stub.called)
-            ok = got == want
+            ok = want <= got <= (want | allow)
             if ok and case.get("expect_asks_photo"):
                 ok = any(w in turn.answer for w in PHOTO_WORDS)
             runs.append({"tools": sorted(got), "ok": ok,
                          "answer": turn.answer[:160],
                          "composed": turn.composed,
                          "violations": turn.trace.violations})
+        # ★ 호출 실패(429·503)는 **라우팅 실패가 아니다.** 같이 세면 점수가
+        #   "라우팅 + 무료 티어 운" 이 되어 무엇이 나빠졌는지 못 가린다.
+        #   센 회차(tried)만 놓고 보고, 오류 수는 따로 적는다.
+        errs = sum(bool(r.get("error")) for r in runs)
+        tried = REPEATS - errs
         n_ok = sum(r["ok"] for r in runs)
-        passes += n_ok == REPEATS
-        rows.append({"id": case["id"], "want": sorted(want),
-                     "passed": f"{n_ok}/{REPEATS}", "runs": runs})
-        mark = "OK" if n_ok == REPEATS else ("~ " if n_ok else "X ")
+        clean = tried > 0 and n_ok == tried
+        passes += clean
+        errored += errs
+        rows.append({"id": case["id"], "want": sorted(want), "allow": sorted(allow),
+                     "passed": f"{n_ok}/{tried}", "errors": errs, "runs": runs})
+        mark = "OK" if clean else ("~ " if n_ok else "X ")
         seen = " | ".join("ERR" if r.get("error") else (",".join(r["tools"]) or "(없음)")
                           for r in runs)
         expect = ",".join(sorted(want)) or "(없음)"
-        print(f"{mark} {case['id']:<28} 기대 {expect:<42} 실제 {seen}")
+        if allow:
+            expect += f" (+{','.join(sorted(allow))} 허용)"
+        print(f"{mark} {case['id']:<30} 기대 {expect:<50} 실제 {seen}")
 
-    print(f"\n전 회차 통과: {passes}/{len(cases)}  (각 {REPEATS}회)")
-    _save("routing", {"repeats": REPEATS, "passed": passes, "total": len(cases), "rows": rows})
+    note = f" · 호출 오류 {errored}회 제외" if errored else ""
+    print(f"\n전 회차 통과: {passes}/{len(cases)}  (각 {REPEATS}회{note})")
+    _save("routing", {"repeats": REPEATS, "passed": passes, "total": len(cases),
+                      "call_errors": errored, "rows": rows})
     return 0 if passes == len(cases) else 1
 
 
