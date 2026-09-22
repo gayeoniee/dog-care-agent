@@ -43,6 +43,9 @@ class Settings:
     llm_model: str = os.environ.get("LLM_MODEL", "gemini-3.6-flash")
     llm_api_key: str = os.environ.get("LLM_API_KEY", "")
     llm_temperature: float = float(os.environ.get("LLM_TEMPERATURE", "0.2"))
+    #: 한 응답의 상한. **안 보내면 로컬 모델이 끝없이 생성한다** — granite4.1 이 한 요청에서
+    #: 1,000토큰 넘게 이어 가며 라우팅 평가를 멈춰 세웠다. Gemini 는 알아서 끊어서 안 보였다.
+    llm_max_tokens: int = int(os.environ.get("LLM_MAX_TOKENS", "1024"))
     llm_timeout: float = float(os.environ.get("LLM_TIMEOUT_SECONDS", "120"))
     #: 429·503 재시도 횟수. 무료 티어는 "high demand" 503 이 자주 난다.
     llm_retries: int = int(os.environ.get("LLM_RETRIES", "4"))

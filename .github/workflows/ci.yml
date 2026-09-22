@@ -33,3 +33,11 @@ jobs:
       - run: uv run python evals/run.py compare
         env:
           PYTHONUTF8: "1"
+
+  # 데모 컨테이너가 실제로 빌드되고 뜨는지 (D1). 로컬에 Docker 데몬이 없어도 여기서 검증된다.
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t dog-care-agent .
+      - run: docker run --rm -e LLM_API_KEY=x dog-care-agent uv run dogcare --help

@@ -115,13 +115,15 @@ async def judge_one(client: httpx.AsyncClient, base: str, model: str, key: str,
     body = {"model": model, "temperature": 0.0,
             "messages": [{"role": "system", "content": JUDGE_SYSTEM},
                          {"role": "user", "content": user}]}
-    for attempt in range(4):
+    for attempt in range(6):
         r = await client.post(f"{base.rstrip('/')}/chat/completions",
                               headers={"Authorization": f"Bearer {key}"}, json=body)
-        if r.status_code in (429, 500, 502, 503, 504) and attempt < 3:
-            await asyncio.sleep(2.0 ** attempt)
+        if r.status_code in (429, 500, 502, 503, 504) and attempt < 5:
+            # 무료 티어 429 는 분 단위로 풀린다. 한 건 때문에 47건 채점을 통째로 잃지 않는다.
+            await asyncio.sleep(min(60.0, 3.0 * 2 ** attempt))
             continue
-        r.raise_for_status()
+        if r.status_code != 200:
+            return {"error": f"HTTP {r.status_code}", "form": _form(answer)}
         text = r.json()["choices"][0]["message"].get("content") or ""
         start, end = text.find("{"), text.rfind("}")
         try:

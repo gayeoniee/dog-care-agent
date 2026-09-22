@@ -55,6 +55,7 @@
   <span id="c-demo" class="chip demo" hidden>데모 모드 — 스텁 서브에이전트</span>
   <span id="c-sub" class="chip">연결 확인 중…</span>
   <span id="c-model" class="chip"></span>
+  <span id="c-stats" class="chip" title="이 서버의 traces/ 집계 — 첫 초안이 게이트에 걸린 횟수"></span>
 </header>
 <main>
   <section class="panel">
@@ -82,6 +83,17 @@ fetch("/api/health").then((r) => r.json()).then((h) => {
   $("#c-sub").className = "chip " + (h.subagents.length === 2 ? "ok" : "bad");
   $("#c-model").textContent = h.model;
 });
+// 이 서버가 지금까지 뭘 막았나 — 게이트가 장식이 아니라는 걸 화면이 직접 말한다.
+async function refreshStats() {
+  try {
+    const s = await fetch("/api/stats").then((r) => r.json());
+    const el = $("#c-stats");
+    if (!s.turns) { el.textContent = "기록 0턴"; return; }
+    const hits = Object.entries(s.gate_hits || {}).map(([g, n]) => g + " " + n).join(" · ");
+    el.textContent = `기록 ${s.turns}턴 · 게이트 걸림 ${s.first_pass_hit} (고침 ${s.repaired} · 조립 ${s.composed})` + (hits ? " · " + hits : "");
+  } catch (_) { /* 통계는 있으면 좋고 없어도 된다 */ }
+}
+refreshStats();
 
 // ── 사진 + 가이드 프레임 ─────────────────────────────
 const drop = $("#drop"), fin = $("#file"), stage = $("#stage"), cv = $("#cv"), bx = $("#box");
@@ -184,6 +196,7 @@ function render(r) {
     if (det.open) { const t = await fetch("/api/trace/" + r.trace).then((x) => x.json()); det.querySelector("pre").textContent = JSON.stringify(t, null, 2); }
   }, { once: true });
   d.appendChild(det); chat.scrollTop = chat.scrollHeight;
+  refreshStats();
 }
 </script>
 </body>

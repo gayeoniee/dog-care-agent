@@ -47,6 +47,7 @@ class ToolCallingLLM:
             "model": self._s.llm_model,
             "messages": messages,
             "temperature": self._s.llm_temperature,
+            "max_tokens": self._s.llm_max_tokens,
         }
         if tools:
             body["tools"] = tools
