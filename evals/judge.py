@@ -73,6 +73,10 @@ JUDGE_SYSTEM = """당신은 채점자입니다. 아래에 (1) 툴이 돌려준 �
   문장을 잇는 접속어("산책은 어떻게 하냐면") 도 사실이 아니므로 세지 않습니다.
 - verdict_fidelity: 피부 판정의 verdict 와 계열(group)을 흐리거나 부풀리지 않고 옮겼으면 1.
   (abnormal 을 "괜찮아 보여요" 로, group 이 없는데 계열을 말함, 6종 병변 이름을 말함 → 0)
+  ⚠️ 계열·확률·특징을 **생략**한 것은 감점이 아닙니다. verdict 의 방향(이상/정상/재촬영)이
+  유지되면 1 입니다. 반대로 말하거나 없는 것을 말한 경우만 0 입니다.
+  ⚠️ 원본의 body · 계열 문장("모양만 보면 …에 가깝습니다") · 특징 · 주의 문구를 옮긴 것은
+  no_extra_claims 에서도 "보탠 것" 이 아닙니다 — 원본에 있는 문장입니다.
 
 반드시 JSON 만 출력하세요:
 {"keeps_steps": 0|1|null, "keeps_citations": 0|1|null, "no_extra_claims": 0|1,
@@ -103,10 +107,18 @@ def _tool_digest(calls: list[dict[str, Any]]) -> str:
         elif c["name"] == "screen_skin_photo" and "verdict" in r:
             s2 = r.get("stage2") or {}
             g = s2.get("group")
-            gname = g.get("name") if isinstance(g, dict) else g
+            # ★ body · 계열의 percent/feature/caveat 도 원본이다. 3회차 채점(2026-09-23)에서
+            #   이걸 빼고 보여 줬더니 판정기가 "이 사진만으로 정확하게 알 수 없습니다"(body
+            #   그대로)와 "딱지, 둥근 비늘"(feature 그대로)을 보탠 말로 세어 no_extra_claims
+            #   가 52% 로 나왔다. 판정기가 못 본 것은 판정기의 숫자지 시스템의 숫자가 아니다.
+            if isinstance(g, dict):
+                gdesc = (f"{g.get('name')} (확률 {g.get('percent')}%; 문장: {g.get('text')}; "
+                         f"특징: {g.get('feature')}; 주의: {g.get('caveat')})")
+            else:
+                gdesc = g or "없음(확신 낮음)"
             parts.append(f"[피부 판정] verdict={r.get('verdict')}, "
-                         f"계열={gname or '없음(확신 낮음)'}, "
-                         f"headline={r.get('headline')}, action={r.get('action')}")
+                         f"headline={r.get('headline')}, body={r.get('body')}, "
+                         f"계열={gdesc}, action={r.get('action')}")
     return "\n\n".join(parts) or "(툴 결과 없음)"
 
 
