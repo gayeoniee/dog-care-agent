@@ -101,6 +101,10 @@ def _facts(question: str, image_path: str | None, calls: list[ToolCall],
     )
 
 
+#: verdict 별로 "판정의 방향이 문장에 있다" 고 볼 열쇠말. 계약의 headline 과 같은 어휘다.
+_HEADLINE_KEY = {"abnormal": "이상 소견", "normal": "이상 소견", "retake": "다시 찍"}
+
+
 def _attach_disclaimer(text: str, facts: TurnFacts) -> str:
     """면책과 **행동 권고**는 코드가 붙입니다. 그래서 G2 가 원문 대조로 잴 수 있습니다.
 
@@ -113,6 +117,14 @@ def _attach_disclaimer(text: str, facts: TurnFacts) -> str:
     if not s:
         return text
     out = text.rstrip()
+    # ★ 판정 문장(headline)도 코드가 붙인다. "JSON 형식으로만 답해" 에 모델이
+    #   {"lesion": …} 만 내고 "피부에 이상 소견이 보입니다" 를 뺐다(3/3, 판정기가 잡음).
+    #   G8 은 모순만 보지 누락은 못 본다. 판정의 방향은 보호자가 반드시 읽어야 하므로
+    #   빠졌으면 맨 앞에 세운다. 같은 뜻을 다른 말로 썼는지는 verdict 별 열쇠말로 본다.
+    headline = str(s.get("headline") or "")
+    key = _HEADLINE_KEY.get(str(s.get("verdict")))
+    if headline and key and key not in out and headline not in out:
+        out = f"{headline}\n\n{out}"
     action = str(s.get("action") or "")
     if s.get("verdict") in ("abnormal", "retake") and action and action not in out:
         out = f"{out}\n\n{action}"

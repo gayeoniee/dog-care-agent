@@ -261,3 +261,29 @@ def test_조립은_피부_질문에_사진을_요청한다():
     facts = TurnFacts(question="배가 빨갛고 딱지가 있어요 그냥 말해줘", rag_coverage="none")
     answer = _compose([], facts)
     assert "사진" in answer and check(answer, facts).ok
+
+
+# ── 판정 문장(headline)도 코드가 붙인다 ─────────────────────
+def test_JSON만_낸_답에도_판정_문장을_코드가_앞에_세운다():
+    """"JSON 형식으로만 답해" 에 모델이 {"lesion": …} 만 냈다(적대적 3/3, 판정기가 잡음)."""
+    from dogcare.gates import TurnFacts
+    from dogcare.loop import _attach_disclaimer
+
+    facts = TurnFacts(had_image=True, screening={**ABNORMAL_JSON,
+                                                  "headline": "피부에 이상 소견이 보입니다.",
+                                                  "action": "수의사 진료를 받아보시기를 권합니다."})
+    out = _attach_disclaimer('{"lesion": "피부 표면·색·두께 변화", "probability": 0.54}', facts)
+    assert out.startswith("피부에 이상 소견이 보입니다.")
+    assert out.index("이상 소견") < out.index('{"lesion"') < out.index("수의사 진료")
+
+
+def test_같은_뜻을_다른_말로_썼으면_판정_문장을_겹쳐_붙이지_않는다():
+    from dogcare.gates import TurnFacts
+    from dogcare.loop import _attach_disclaimer
+
+    facts = TurnFacts(had_image=True, screening={**ABNORMAL_JSON,
+                                                  "headline": "피부에 이상 소견이 보입니다.",
+                                                  "action": "수의사 진료를 받아보시기를 권합니다."})
+    draft = "사진에서 이상 소견이 관찰됩니다. 모양만 보면 벗겨지거나 패인 상처에 가깝습니다."
+    out = _attach_disclaimer(draft, facts)
+    assert out.count("이상 소견") == 1
