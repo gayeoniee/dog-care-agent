@@ -22,7 +22,7 @@ GitHub Pages 는 정적 파일만 서빙한다. 파이썬·토치·postgres 는 
 - [x] **공개 전환** — 사용자, 2026-09-22. 순서였던 것:
   1. `gh repo edit gayeoniee/dog-care-agent --visibility public --accept-visibility-change-consequences`
   2. Settings → Pages → Source: **GitHub Actions** (private 레포는 Pages 가 유료라 공개 뒤에 켠다)
-  3. `gh workflow run pages.yml` — `site/` 가 https://gayeoniee.github.io/dog-care-agent/ 로
+  3. `gh workflow run pages.yml` — `site/` 가 https://thusfar.cloud/dog-care-agent/ 로
   4. HF 릴리스 `gayoniee/daengs-skin-screening-release` 는 **private 그대로 둬도 된다** —
      README 가 데모 모드를 첫 화면으로 안내하고, 진짜 모드는 HF_TOKEN 이 있는 사람의 것이다.
      public 으로 돌리려면 모델카드에 AI Hub 파생·연구 목적 문구를 먼저 적는다
@@ -117,7 +117,7 @@ GitHub Pages 는 정적 파일만 서빙한다. 파이썬·토치·postgres 는 
 
 # 3차 — 공개 뒤 손본 것 (2026-09-23, 쿼터 리셋을 기다리는 동안)
 
-- [x] **GitHub Pages 켬** — API 로 build_type=workflow, `pages.yml` 재실행 → https://gayeoniee.github.io/dog-care-agent/ 200
+- [x] **GitHub Pages 켬** — API 로 build_type=workflow, `pages.yml` 재실행 → https://thusfar.cloud/dog-care-agent/ 200
 - [x] **레포 메타** — homepage = Space, topics 8개
 - [x] **429 가 화면에 JSON 으로 찍히던 것** — `server.user_facing_error`: 한도·과부하·시간초과는 보호자 문장으로, 나머지는 첫 줄만. 테스트 1개
 - [x] **judge 가 트레이스 폴더째 채점하던 것** — 폴더는 회차마다 쌓인다(옛 47 + 반쯤 죽은 회차). 적대적 결과 JSON 에 회차별 `trace` 파일명을 남기고, `judge.py score` 기본이 **최신 회차만** 본다
