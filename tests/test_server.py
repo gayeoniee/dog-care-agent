@@ -203,3 +203,16 @@ def test_user_facing_error_hides_provider_json() -> None:
     # 모르는 오류는 첫 줄만, 종류를 남긴다
     other = server.user_facing_error(RuntimeError("툴 이름이 겹칩니다\n두 번째 줄"))
     assert other == "RuntimeError: 툴 이름이 겹칩니다"
+
+
+def test_client_ip_prefers_forwarded_header() -> None:
+    """HF Spaces 프록시 뒤에서 client.host 가 전부 같아 한 사람이 쓰면 모두가 429 를 보던 것."""
+    from starlette.requests import Request
+
+    def req(headers: dict[str, str], host: str = "10.0.0.1") -> Request:
+        raw = [(k.lower().encode(), v.encode()) for k, v in headers.items()]
+        return Request({"type": "http", "headers": raw, "client": (host, 1234),
+                        "method": "GET", "path": "/", "query_string": b""})
+
+    assert server.client_ip(req({"X-Forwarded-For": "203.0.113.9, 10.0.0.1"})) == "203.0.113.9"
+    assert server.client_ip(req({})) == "10.0.0.1"

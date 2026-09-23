@@ -77,6 +77,13 @@ def main() -> None:
         if p:
             shutil.copy(p, DATA / f"{kind}.json")
             index["evals"][kind] = p.name
+    # judge 채점(judge-*.json)과 보정(judge-calibration-*.json)은 이름이 겹치므로 따로 고른다.
+    # 채점 rows 에는 질문 앞 60자가 들어 있어 그대로 올려도 사진 경로는 없다.
+    js = [p for p in sorted((ROOT / "evals" / "out").glob("judge-*.json"))
+          if "calibration" not in p.name]
+    if js:
+        shutil.copy(js[-1], DATA / "judge.json")
+        index["evals"]["judge"] = js[-1].name
 
     (DATA / "shots").mkdir(exist_ok=True)
     for p in sorted((ROOT / "docs" / "assets").glob("*.png")):

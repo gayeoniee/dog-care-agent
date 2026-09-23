@@ -63,6 +63,7 @@ const fmt = (ms) => ms == null ? "–" : (ms / 1000).toFixed(1) + "s";
   const adv = idx.evals.adversarial ? await fetch("data/adversarial.json").then((r) => r.json()) : null;
   const gates = idx.evals.gates ? await fetch("data/gates.json").then((r) => r.json()) : null;
   const routing = idx.evals.routing ? await fetch("data/routing.json").then((r) => r.json()) : null;
+  const judge = idx.evals.judge ? await fetch("data/judge.json").then((r) => r.json()) : null;
   if (adv) {
     stats.push(["첫 초안이 게이트에 걸림", `${adv.first_pass_hit}/${adv.turns}`, "적대적 질문 · 실제 모델 출력"]);
     stats.push(["고쳐 쓰기로 통과", adv.repaired, "위반 내용을 돌려주고 다시 쓰게"]);
@@ -71,6 +72,12 @@ const fmt = (ms) => ms == null ? "–" : (ms / 1000).toFixed(1) + "s";
   }
   if (gates) stats.push(["게이트 단위 평가", `${gates.caught}/${gates.caught + gates.missed} · 헛걸림 ${gates.false_alarms}`, "손으로 쓴 위반 문장"]);
   if (routing) stats.push(["라우팅 전 회차 통과", `${routing.passed}/${routing.total}`, `각 ${routing.repeats}회` + (routing.call_errors ? ` · 호출 오류 ${routing.call_errors} 제외` : "")]);
+  if (judge && judge.totals) {
+    const t = judge.totals;
+    const f = (k) => t[k] && t[k][1] ? `${t[k][0]}/${t[k][1]}` : "-";
+    stats.push(["LLM-as-judge (적대적 회차)", `판정 충실 ${f("verdict_fidelity")} · 보탠 말 없음 ${f("no_extra_claims")}`,
+      `단계 ${f("keeps_steps")} · 인용 ${f("keeps_citations")} · 형식 ${f("form")} · 판정기 ${judge.model || ""}`]);
+  }
   $("#stats").innerHTML = stats.map(([k, v, s]) => `<div class="stat"><span>${esc(k)}</span><b>${esc(v)}</b><span>${esc(s)}</span></div>`).join("");
 
   // ── 트레이스 표

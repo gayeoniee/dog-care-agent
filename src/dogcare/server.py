@@ -55,6 +55,20 @@ _JPEG = bytes([0xFF, 0xD8, 0xFF])
 _PNG = bytes([0x89]) + b"PNG"
 
 
+def client_ip(request: Request) -> str:
+    """레이트 리밋의 열쇠. **프록시 뒤에서는 `request.client.host` 가 전부 같은 값**이다.
+
+    HF Spaces 는 모든 요청이 프록시 IP 로 들어온다. 그걸 그대로 쓰면 분당 6회 제한이
+    "방문자 한 명당" 이 아니라 "전 세계 합쳐서" 가 된다 — 한 사람이 쓰면 다른 사람이
+    429 를 본다. 프록시가 붙이는 `X-Forwarded-For` 의 첫 값(원래 클라이언트)을 쓴다.
+    로컬에서는 그 헤더가 없으니 client.host 로 돌아간다.
+    """
+    fwd = request.headers.get("x-forwarded-for", "")
+    if fwd:
+        return fwd.split(",")[0].strip() or "?"
+    return request.client.host if request.client else "?"
+
+
 def user_facing_error(exc: BaseException) -> str:
     """보호자 화면에 보일 오류 문장.
 
@@ -151,7 +165,7 @@ def build_app(settings: Settings) -> FastAPI:
         if agents is None:
             raise HTTPException(503, "서브에이전트가 아직 안 떴습니다")
         now = time.time()
-        ip = request.client.host if request.client else "?"
+        ip = client_ip(request)
         if not _rate_ok(ip, now):
             raise HTTPException(429, f"분당 {RATE_PER_MIN}회까지입니다. 잠시 뒤에 다시 보내주세요")
         question = question.strip()
