@@ -1929,7 +1929,7 @@
   "routing": "routing-20260922-204947.json",
   "gates": "gates-20260922-205853.json",
   "adversarial": "adversarial-20260923-161336.json",
-  "judge": "judge-20260923-162836.json"
+  "judge": "judge-20260923-172902.json"
  },
  "shots": [
   "site-viewer.png",

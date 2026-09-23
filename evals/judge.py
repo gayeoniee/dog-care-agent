@@ -65,6 +65,8 @@ JUDGE_SYSTEM = """당신은 채점자입니다. 아래에 (1) 툴이 돌려준 �
 
 - keeps_steps: RAG 답에 있던 번호 매긴 단계가 최종 답에 **전부 남아 있으면** 1.
   순서를 바꾸거나 다른 말을 덧붙였어도, 원래 단계가 하나도 빠지지 않았으면 1.
+  ⚠️ 단계가 **늘어난** 것은 여기서 감점하지 않습니다 — 그건 no_extra_claims 의 몫입니다.
+  이 항목은 오직 "빠졌는가" 만 봅니다.
 - keeps_citations: RAG 답에 있던 [자료 N] 인용이 최종 답에도 남아 있으면 1.
 - no_extra_claims: 원본에 없는 **사실·조언·원인 추정**을 보태지 않았으면 1.
   ⚠️ 다음은 코드가 자동으로 붙이는 문장이라 "보탠 것" 으로 세지 않습니다:
@@ -111,11 +113,23 @@ def _tool_digest(calls: list[dict[str, Any]]) -> str:
             #   이걸 빼고 보여 줬더니 판정기가 "이 사진만으로 정확하게 알 수 없습니다"(body
             #   그대로)와 "딱지, 둥근 비늘"(feature 그대로)을 보탠 말로 세어 no_extra_claims
             #   가 52% 로 나왔다. 판정기가 못 본 것은 판정기의 숫자지 시스템의 숫자가 아니다.
-            if isinstance(g, dict):
-                gdesc = (f"{g.get('name')} (확률 {g.get('percent')}%; 문장: {g.get('text')}; "
-                         f"특징: {g.get('feature')}; 주의: {g.get('caveat')})")
+            if isinstance(g, dict | str):
+                name = g.get("name") if isinstance(g, dict) else g
+                extra = g if isinstance(g, dict) else {}
+                # 계열 문장은 계약의 고정 틀이다 — 필드가 비어 있어도(보정 픽스처 · 옛 계약)
+                # 같은 문장을 보여 준다. 안 보여 주면 판정기가 그 문장을 "보탠 말" 로 센다
+                # (3회차 보정에서 2건이 그랬다).
+                text = extra.get("text") or f"모양만 보면 {name}에 가깝습니다."
+                bits = [f"문장: {text}"]
+                if extra.get("percent") is not None:
+                    bits.append(f"확률 {extra['percent']}%")
+                if extra.get("feature"):
+                    bits.append(f"특징: {extra['feature']}")
+                if extra.get("caveat"):
+                    bits.append(f"주의: {extra['caveat']}")
+                gdesc = f"{name} ({'; '.join(bits)})"
             else:
-                gdesc = g or "없음(확신 낮음)"
+                gdesc = "없음(확신 낮음)"
             parts.append(f"[피부 판정] verdict={r.get('verdict')}, "
                          f"headline={r.get('headline')}, body={r.get('body')}, "
                          f"계열={gdesc}, action={r.get('action')}")

@@ -11,12 +11,12 @@
       6
     ],
     "no_extra_claims": [
-      51,
+      49,
       60
     ],
     "verdict_fidelity": [
-      45,
-      45
+      47,
+      47
     ],
     "form": [
       60,
@@ -32,7 +32,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 핵심 내용을 충실히 반영하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
+        "note": "원본의 계열 및 특징 정보를 생략했으나, 이는 감점 요인이 아니며 verdict의 방향을 정확히 유지함.",
         "form": 1
       }
     },
@@ -68,7 +68,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 핵심 내용인 이상 소견과 진료 권고를 정확히 전달하였으며, 추가적인 사실 관계를 덧붙이지 않았습니다.",
+        "note": "원본의 핵심 판정 내용(이상 소견, 진료 권고)을 충실히 반영하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -80,7 +80,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 핵심 내용인 이상 소견과 진료 권고를 정확히 전달하였으며, 추가적인 사실 관계를 덧붙이지 않았습니다.",
+        "note": "원본의 핵심 내용인 이상 소견과 진료 권고를 정확히 전달하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -92,7 +92,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 핵심 내용인 이상 소견과 진료 권고를 정확히 전달하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
+        "note": "원본의 핵심 판정 내용(이상 소견)을 정확히 전달하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -104,7 +104,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 핵심 판정 결과와 권고 사항을 정확히 전달하였으며, 추가적인 사실 관계를 덧붙이지 않았습니다.",
+        "note": "원본의 핵심 판정 결과와 권고 사항을 정확히 전달하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -116,7 +116,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 핵심 판정 결과와 권고 사항을 정확히 전달하였으며, 추가적인 사실 관계를 덧붙이지 않았습니다.",
+        "note": "원본의 핵심 판정 결과와 권고 사항을 정확히 전달하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -128,7 +128,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 핵심 판정 결과와 권고 사항을 정확히 전달하였으며, 추가적인 사실 관계를 덧붙이지 않았습니다.",
+        "note": "원본의 핵심 판정 결과와 권고 사항을 정확히 전달하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -140,7 +140,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 정보를 충실히 반영하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
+        "note": "원본의 내용을 충실히 반영하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -164,7 +164,7 @@
         "keeps_citations": null,
         "no_extra_claims": 0,
         "verdict_fidelity": 1,
-        "note": "원본에 없는 '6종의 확률을 개별적으로 제공하지 않는 이유'에 대한 설명을 추가하여 no_extra_claims 항목에서 감점되었습니다.",
+        "note": "원본에 없는 '6종의 확률을 개별적으로 제공하지 않는 이유'에 대한 설명을 추가함.",
         "form": 1
       }
     },
@@ -176,7 +176,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 핵심 내용과 판정 결과를 정확하게 전달하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
+        "note": "원본의 내용을 충실히 반영하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -188,7 +188,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 핵심 내용과 판정 결과를 정확하게 전달하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
+        "note": "원본의 내용을 충실히 반영하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -200,7 +200,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 핵심 내용과 판정 결과를 정확하게 전달하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
+        "note": "원본의 내용을 충실히 반영하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -212,7 +212,7 @@
         "keeps_citations": null,
         "no_extra_claims": 0,
         "verdict_fidelity": 1,
-        "note": "원본에 없는 수의사 진료 관련 조언을 추가하였습니다.",
+        "note": "원본에 없는 수의사 진료 관련 조언을 추가하여 no_extra_claims 항목에서 감점하였습니다.",
         "form": 1
       }
     },
@@ -224,7 +224,7 @@
         "keeps_citations": null,
         "no_extra_claims": 0,
         "verdict_fidelity": 1,
-        "note": "원본에 없는 '이미 수의사에게 진료를 받으셨다면~'이라는 조언을 추가하였습니다.",
+        "note": "원본에 없는 '이미 수의사에게 진료를 받으셨다면...'이라는 조언을 추가하였습니다.",
         "form": 1
       }
     },
@@ -236,7 +236,7 @@
         "keeps_citations": null,
         "no_extra_claims": 0,
         "verdict_fidelity": 1,
-        "note": "원본에 없는 수의사 진료 관련 조언을 추가하여 no_extra_claims 항목에서 감점되었습니다.",
+        "note": "원본에 없는 수의사 진료 관련 조언을 추가하여 no_extra_claims 항목에서 감점하였습니다.",
         "form": 1
       }
     },
@@ -248,7 +248,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 판정 내용과 계열 정보를 정확하게 옮겼으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
+        "note": "원본의 내용을 충실히 반영하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -260,7 +260,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 판정 결과와 특징 설명을 정확하게 전달하였으며, 추가적인 사실 관계 왜곡이나 불필요한 조언이 없습니다.",
+        "note": "원본의 판정 내용을 정확하게 전달하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -272,7 +272,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 판정 내용과 계열 정보를 정확하게 전달하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
+        "note": "원본의 내용을 충실히 반영하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -284,7 +284,7 @@
         "keeps_citations": 1,
         "no_extra_claims": 1,
         "verdict_fidelity": null,
-        "note": "원본의 모든 단계와 인용을 정확히 포함하였으며, 추가적인 사실 주장 없이 원본 내용을 충실히 전달함.",
+        "note": "원본의 모든 단계와 인용을 정확히 포함하였으며, 추가적인 사실 관계 왜곡이나 외부 정보 삽입이 없습니다.",
         "form": 1
       }
     },
@@ -295,8 +295,8 @@
         "keeps_steps": 1,
         "keeps_citations": 1,
         "no_extra_claims": 1,
-        "verdict_fidelity": null,
-        "note": "원본의 단계와 인용을 모두 정확히 포함하였으며, 추가적인 사실 관계 왜곡 없이 내용을 잘 전달함.",
+        "verdict_fidelity": 1,
+        "note": "원본의 단계와 인용을 모두 정확히 포함하였으며, 추가적인 사실 왜곡 없이 내용을 잘 전달함.",
         "form": 1
       }
     },
@@ -307,8 +307,8 @@
         "keeps_steps": 1,
         "keeps_citations": 1,
         "no_extra_claims": 1,
-        "verdict_fidelity": null,
-        "note": "원본의 내용을 누락 없이 정확하게 옮겼으며, 추가적인 사실 주장도 없습니다.",
+        "verdict_fidelity": 1,
+        "note": "원본의 모든 단계와 인용을 정확히 포함하였으며, 추가적인 사실 관계 왜곡 없이 답변함.",
         "form": 1
       }
     },
@@ -320,7 +320,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": null,
-        "note": "툴 결과가 없는 상태에서 일반적인 안내를 제공하였으며, 원본을 왜곡하거나 추가적인 사실을 보태지 않았습니다.",
+        "note": "툴 결과가 없는 상태에서 적절하게 대응하였으며, 추가적인 사실을 보태지 않았습니다.",
         "form": 1
       }
     },
@@ -332,7 +332,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": null,
-        "note": "툴 결과가 없는 상태에서 적절한 안내를 제공함.",
+        "note": "툴 결과가 없는 상태에서 일반적인 안내를 제공하였으며, 추가적인 사실 관계를 왜곡하거나 보태지 않았습니다.",
         "form": 1
       }
     },
@@ -344,7 +344,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": null,
-        "note": "툴 결과가 없는 상태에서 적절한 안내를 제공함.",
+        "note": "툴 결과가 없는 상태에서 일반적인 안내를 제공하였으며, 추가적인 사실 관계를 왜곡하거나 보태지 않았습니다.",
         "form": 1
       }
     },
@@ -356,7 +356,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": null,
-        "note": "원본에 RAG 결과가 없으므로 해당 항목은 null 처리하였으며, 추가적인 사실 관계 왜곡 없이 안내 문구만 포함되었습니다.",
+        "note": "원본 결과에 단계나 인용이 없으며, 추가적인 사실 주장 없이 안내 문구만 포함되었습니다.",
         "form": 1
       }
     },
@@ -368,7 +368,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": null,
-        "note": "툴 결과가 없어 판단할 수 없으나, 답변 내용에 추가적인 사실이나 조언을 덧붙이지 않고 적절하게 대응함.",
+        "note": "툴 결과가 없는 상태에서 일반적인 안내를 제공하였으며, 원본의 내용을 왜곡하거나 추가적인 사실을 보태지 않았습니다.",
         "form": 1
       }
     },
@@ -380,7 +380,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": null,
-        "note": "툴 결과가 없는 상태에서 일반적인 주의사항을 안내하였으며, 원본을 왜곡하거나 추가적인 사실을 보태지 않았습니다.",
+        "note": "툴 결과가 없는 상태에서 일반적인 주의사항과 병원 방문 권유만 포함되어 있어 원본을 충실히 반영함.",
         "form": 1
       }
     },
@@ -392,7 +392,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 핵심 판정 내용을 충실히 반영하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
+        "note": "원본의 판정 결과와 권고 사항을 충실히 반영하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -404,7 +404,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 계열 및 특징 정보를 생략했으나, 판정 결과(이상 소견)를 정확히 전달하였고 추가적인 사실 관계를 덧붙이지 않았습니다.",
+        "note": "원본의 계열, 특징, 확률 등 상세 정보를 모두 생략하였으나, verdict의 방향(이상 소견)은 유지하였고 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -416,7 +416,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 계열 및 특징 정보를 생략했으나, 판정 결과(이상 소견)를 정확히 전달하였고 추가적인 사실 관계를 덧붙이지 않았습니다.",
+        "note": "원본의 계열, 특징, 확률 등 상세 정보를 모두 생략하였으나, verdict의 방향(이상 소견)은 유지하였고 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -452,7 +452,7 @@
         "keeps_citations": null,
         "no_extra_claims": 0,
         "verdict_fidelity": 1,
-        "note": "원본에 없는 '암인지 종양인지 여부'라는 구체적인 질환명을 언급하여 추가적인 사실을 보탰습니다.",
+        "note": "원본에 없는 '암인지 종양인지 여부는'이라는 추정적 문장을 추가하였습니다.",
         "form": 1
       }
     },
@@ -464,7 +464,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 판정 내용을 충실히 옮겼으며, 추가적인 사실 주장 없이 안내 문구만 포함되었습니다.",
+        "note": "원본의 판정 내용을 충실히 옮겼으며, 추가된 내용은 안내 문구 및 RAG 결과 부재에 대한 설명으로 적절합니다.",
         "form": 1
       }
     },
@@ -474,9 +474,9 @@
       "judge": {
         "keeps_steps": null,
         "keeps_citations": null,
-        "no_extra_claims": 1,
+        "no_extra_claims": 0,
         "verdict_fidelity": 1,
-        "note": "원본의 내용을 충실히 반영하였으며, 추가된 내용은 면책 문구 및 안내 불가 사유로 적절함.",
+        "note": "원본에 없는 '반려견 행동/훈련 전문 상담'이라는 사실을 추가하여 no_extra_claims 항목에서 감점되었습니다.",
         "form": 1
       }
     },
@@ -488,7 +488,7 @@
         "keeps_citations": null,
         "no_extra_claims": 0,
         "verdict_fidelity": 1,
-        "note": "원본에 없는 '반려견 행동이나 훈련 상담 전문'이라는 사실을 추가하여 no_extra_claims 항목에서 감점되었습니다.",
+        "note": "원본에 없는 '반려견 행동/훈련 상담 전문'이라는 사실을 추가하였고, 피부 질환에 대한 안내가 어렵다는 내용을 길게 덧붙였습니다.",
         "form": 1
       }
     },
@@ -500,7 +500,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 판정 결과와 계열 정보를 정확하게 추출하였으며, 추가적인 사실 관계를 덧붙이지 않았습니다.",
+        "note": "원본의 판정 결과와 계열 정보를 정확하게 전달하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -512,7 +512,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 판정 결과와 계열 정보를 정확하게 추출하였으며, 추가적인 사실 관계를 덧붙이지 않았습니다.",
+        "note": "원본의 판정 결과와 계열 정보를 정확하게 전달하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -524,7 +524,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 판정 결과와 계열 정보를 정확하게 추출하였으며, 추가적인 사실 관계를 덧붙이지 않았습니다.",
+        "note": "원본의 판정 결과와 계열 정보를 정확하게 전달하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -584,7 +584,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 판정 결과와 계열 정보를 충실히 반영하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
+        "note": "원본의 핵심 정보와 판정 결과를 충실히 반영하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -606,9 +606,9 @@
       "judge": {
         "keeps_steps": 1,
         "keeps_citations": 1,
-        "no_extra_claims": 1,
+        "no_extra_claims": 0,
         "verdict_fidelity": null,
-        "note": "원본의 단계와 인용을 모두 충실히 포함하였으며, 추가된 문장들은 원본의 내용을 부연 설명하는 수준으로 사실 왜곡이 없습니다.",
+        "note": "원본에 없는 '멈추는 행동을 일관되게 유지하는 것이 중요합니다'와 '3가지 핵심 방법이 포함되어 있습니다' 등의 사족이 추가되었습니다.",
         "form": 1
       }
     },
@@ -620,7 +620,7 @@
         "keeps_citations": 1,
         "no_extra_claims": 0,
         "verdict_fidelity": null,
-        "note": "원본에 없는 '5개 이상의 방법' 관련 언급과 자료 한계에 대한 사족을 추가하여 no_extra_claims 항목에서 감점되었습니다.",
+        "note": "원본에 없는 '5개 이상의 방법'에 대한 언급과 그에 대한 변명성 문장을 추가하여 no_extra_claims 항목에서 감점하였습니다.",
         "form": 1
       }
     },
@@ -632,7 +632,7 @@
         "keeps_citations": 1,
         "no_extra_claims": 1,
         "verdict_fidelity": null,
-        "note": "원본의 단계, 인용, 주의사항을 모두 충실히 반영하였으며 추가적인 사실 관계 오류나 과도한 조언이 없습니다.",
+        "note": "원본의 단계와 인용을 모두 충실히 포함하였으며, 추가적인 사실이나 조언 없이 원본 내용을 잘 정리하였습니다.",
         "form": 1
       }
     },
@@ -644,7 +644,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": null,
-        "note": "툴 결과가 없어 평가 항목이 적용되지 않으며, 답변은 지침을 준수하여 정중하게 안내함.",
+        "note": "원본 툴 결과가 없어 해당 항목들은 적용되지 않으며, 추가적인 사실 관계를 보태지 않았습니다.",
         "form": 1
       }
     },
@@ -656,7 +656,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": null,
-        "note": "툴 결과가 없어 평가 항목이 적용되지 않으며, 답변은 지침을 준수하여 안내를 요청하고 있습니다.",
+        "note": "툴 결과가 없는 상태에서 적절하게 대응함.",
         "form": 1
       }
     },
@@ -668,7 +668,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": null,
-        "note": "툴 결과가 없어 평가 항목이 적용되지 않으며, 답변은 지침을 따르지 못한 것에 대한 사과와 안내로 구성됨.",
+        "note": "원본 툴 결과가 없으므로 해당 항목들은 적용되지 않으며, 추가적인 사실 관계를 보태지 않았습니다.",
         "form": 1
       }
     },
@@ -704,7 +704,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 내용을 충실히 반영하였으며, 추가적인 사실이나 조언 없이 적절하게 요약함.",
+        "note": "원본의 판정 내용을 충실히 반영하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -716,7 +716,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 핵심 내용과 계열 정보를 정확하게 전달하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
+        "note": "원본의 핵심 내용과 판정 결과를 충실히 반영하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -728,7 +728,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 핵심 내용과 계열 정보를 정확하게 전달하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
+        "note": "원본의 핵심 내용과 판정 결과를 충실히 반영하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     },
@@ -740,7 +740,7 @@
         "keeps_citations": null,
         "no_extra_claims": 1,
         "verdict_fidelity": 1,
-        "note": "원본의 핵심 내용과 계열 정보를 정확하게 전달하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
+        "note": "원본의 핵심 내용과 판정 결과를 충실히 반영하였으며, 추가적인 사실이나 조언을 덧붙이지 않았습니다.",
         "form": 1
       }
     }
