@@ -216,3 +216,40 @@ def test_client_ip_prefers_forwarded_header() -> None:
 
     assert server.client_ip(req({"X-Forwarded-For": "203.0.113.9, 10.0.0.1"})) == "203.0.113.9"
     assert server.client_ip(req({})) == "10.0.0.1"
+
+
+def test_앞_대화는_상한만큼만_LLM_에_간다(client, monkeypatch):
+    """세션이 30분 사는 동안 대화가 자라면 프롬프트도 턴마다 자란다 — 마지막 N 개만."""
+    monkeypatch.setattr(server, "HISTORY_MAX_MESSAGES", 4)
+    tables = client.app.state.tables
+    sid = None
+    for i in range(5):
+        tables["hits"].clear()                          # 픽스처의 분당 3회 제한을 비껴간다
+        r = client.post("/api/ask", data={"question": f"질문 {i}", "session_id": sid or ""})
+        assert r.status_code == 200, r.text
+        sid = r.json()["session_id"]
+        _result(client, r.json()["job_id"])
+    hist = tables["sessions"][sid]["history"]
+    assert len(hist) == 4 and hist[0]["content"] == "질문 3"
+
+
+def test_결과를_안_가져간_작업은_치운다(client, monkeypatch):
+    """SSE 를 안 열고 탭을 닫으면 jobs 항목이 영영 남는다."""
+    monkeypatch.setattr(server, "JOB_TTL_S", -1)         # 나이와 무관하게 다음 요청에 치운다
+    tables = client.app.state.tables
+    r = client.post("/api/ask", data={"question": "안녕"})
+    stale = r.json()["job_id"]
+    assert stale in tables["jobs"]
+    client.post("/api/ask", data={"question": "또 안녕"})
+    assert stale not in tables["jobs"]
+
+
+def test_비거나_오래된_레이트_리밋_항목은_치운다(client):
+    import time
+    from collections import deque
+
+    tables = client.app.state.tables
+    tables["hits"]["203.0.113.9"] = deque([time.time() - 600])
+    tables["hits"]["203.0.113.10"] = deque()
+    client.post("/api/ask", data={"question": "안녕"})
+    assert "203.0.113.9" not in tables["hits"] and "203.0.113.10" not in tables["hits"]

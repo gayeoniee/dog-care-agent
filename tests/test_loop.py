@@ -287,3 +287,70 @@ def test_같은_뜻을_다른_말로_썼으면_판정_문장을_겹쳐_붙이지
     draft = "사진에서 이상 소견이 관찰됩니다. 모양만 보면 벗겨지거나 패인 상처에 가깝습니다."
     out = _attach_disclaimer(draft, facts)
     assert out.count("이상 소견") == 1
+
+
+# ── 조립 경로가 계열 dict 를 그대로 찍던 것 ─────────────────
+def test_조립한_답에_계열_dict_가_아니라_계약_문장이_들어간다():
+    """`stage2.group` 은 dict 다. f-string 에 넣으면 `{'name': …}` 가 보호자에게 나갔다."""
+    from dogcare.gates import TurnFacts, check
+    from dogcare.loop import _compose
+
+    group = {"name": "벗겨지거나 패인 상처", "prob": 0.82, "percent": 81.7,
+             "text": "모양만 보면 벗겨지거나 패인 상처에 가깝습니다.",
+             "feature": "까짐, 진물, 출혈, 깊게 패인 부위",
+             "caveat": "진단이 아닙니다. 모양만으로는 원인을 알 수 없어요."}
+    s = {**ABNORMAL_JSON, "headline": "피부에 이상 소견이 보입니다.",
+         "body": "이 사진만으로 정확하게 알 수 없습니다.",
+         "action": "수의사 진료를 받아보시기를 권합니다.",
+         "stage2": {"group": group, "groups": []}}
+    facts = TurnFacts(question="이거 뭐예요", had_image=True, screening=s, expected_stage2_arms=3)
+    answer = _compose([], facts)
+    assert "{" not in answer and "'name'" not in answer
+    assert group["text"] in answer and group["feature"] in answer and group["caveat"] in answer
+    assert check(answer, facts).ok
+
+
+def test_계열에_문장이_없으면_이름으로_같은_틀을_채운다():
+    from dogcare.gates import TurnFacts
+    from dogcare.loop import _compose
+
+    s = {**ABNORMAL_JSON, "headline": "h", "body": "b", "action": "a",
+         "stage2": {"group": "깊거나 단단한 혹", "groups": []}}
+    answer = _compose([], TurnFacts(had_image=True, screening=s))
+    assert "모양만 보면 깊거나 단단한 혹에 가깝습니다." in answer
+    assert "진단이 아닙니다." in answer
+
+
+# ── LLM 연결을 턴 동안 재사용하고 끝에 닫는다 ─────────────────
+def test_LLM_클라이언트는_턴_안에서_하나다():
+    from dogcare.config import Settings
+    from dogcare.llm import ToolCallingLLM
+
+    s = Settings()
+    object.__setattr__(s, "llm_api_key", "x")
+    llm = ToolCallingLLM(s)
+    assert llm._http() is llm._http()
+
+
+async def test_턴이_끝나면_LLM_클라이언트를_닫는다(monkeypatch):
+    import dogcare.loop as loop
+
+    closed = []
+
+    class _LLM:
+        def __init__(self, settings):
+            self.calls = 0
+
+        async def chat(self, messages, tools=None):
+            return {"role": "assistant", "content": "안녕하세요"}
+
+        async def aclose(self):
+            closed.append(True)
+
+    class _NoAgents:
+        def __init__(self) -> None:
+            self.tools, self.owner, self.failed = [], {}, {}
+
+    monkeypatch.setattr(loop, "ToolCallingLLM", _LLM)
+    await loop.run_turn("안녕", sub=_NoAgents(), settings=get_settings())
+    assert closed == [True]

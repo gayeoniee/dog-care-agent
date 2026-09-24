@@ -18,6 +18,8 @@ MCP 프로세스 둘이 매번 뜨고, 진짜 모드에서는 bge-m3 2.3GB 와 �
 - 세션은 메모리라 30분 만료 · 200개 상한. 없으면 켜 둔 동안 계속 찹니다.
 - IP 당 분당 RATE_PER_MIN 회 · 동시 MAX_CONCURRENT 개. 공개 데모에 LLM 키를 물리면
   누가 반복 호출해 쿼터를 태웁니다.
+- 앞 대화는 마지막 HISTORY_MAX_MESSAGES 개만 LLM 에 넘깁니다. 안 자르면 긴 대화가
+  턴마다 프롬프트를 키웁니다. 레이트 리밋 표와 작업 표도 요청마다 치웁니다.
 - 인증은 없습니다. 인터넷에 열 때는 앞에 인증 프록시를 둡니다.
 """
 
@@ -48,6 +50,13 @@ MAX_QUESTION = 1_000                 # 저쪽 SkinPayload.question 과 같은 �
 KEEP_UPLOADS = os.environ.get("KEEP_UPLOADS", "0") == "1"
 SESSION_TTL_S = 30 * 60
 SESSION_MAX = 200
+#: LLM 에 넘기는 앞 대화의 상한(메시지 수 = 턴 × 2). 세션은 30분 살아서, 그 안에 스무 턴을
+#: 이어 가면 프롬프트가 턴마다 자란다 — 프롬프트 토큰이 p50 1,815 인 건 **첫 턴** 숫자다.
+#: 게이트가 보는 판정(`state["screening"]`)은 따로 들고 다니므로 이 상한과 무관하다.
+HISTORY_MAX_MESSAGES = int(os.environ.get("HISTORY_MAX_MESSAGES", "10"))
+#: 결과를 아무도 안 받아 간 작업을 치우는 나이. SSE 를 안 열거나 도중에 끊으면 `jobs` 항목이
+#: 영영 남는다 — 공개 데모에서 탭을 닫는 사람이 곧 그 경우다.
+JOB_TTL_S = 5 * 60
 RATE_PER_MIN = int(os.environ.get("RATE_PER_MIN", "10"))
 MAX_CONCURRENT = int(os.environ.get("MAX_CONCURRENT", "2"))
 
@@ -62,6 +71,11 @@ def client_ip(request: Request) -> str:
     "방문자 한 명당" 이 아니라 "전 세계 합쳐서" 가 된다 — 한 사람이 쓰면 다른 사람이
     429 를 본다. 프록시가 붙이는 `X-Forwarded-For` 의 첫 값(원래 클라이언트)을 쓴다.
     로컬에서는 그 헤더가 없으니 client.host 로 돌아간다.
+
+    ⚠️ 첫 값은 **클라이언트가 지어낼 수 있다** — 프록시가 헤더를 덮어쓰지 않고 뒤에 붙이는
+    구성이면, 요청마다 다른 값을 실어 분당 제한을 피할 수 있다. HF 프록시가 어느 쪽인지는
+    바깥에서 확인할 길이 없어 그대로 둔다. 이 제한은 예의 수준이고, 진짜 상한은 동시 실행
+    `MAX_CONCURRENT` 와 무료 티어의 하루 500회다 — 우회해서 얻는 것이 남의 쿼터뿐이다.
     """
     fwd = request.headers.get("x-forwarded-for", "")
     if fwd:
@@ -102,10 +116,11 @@ def sniff_image(data: bytes) -> str | None:
 class _Job:
     """한 요청의 진행 큐. SSE 가 여기서 꺼내 흘립니다."""
 
-    def __init__(self) -> None:
+    def __init__(self, now: float) -> None:
         self.q: asyncio.Queue[dict[str, Any] | None] = asyncio.Queue()
         self.result: dict[str, Any] | None = None
         self.task: asyncio.Task[None] | None = None
+        self.created = now
 
 
 def build_app(settings: Settings) -> FastAPI:
@@ -122,6 +137,13 @@ def build_app(settings: Settings) -> FastAPI:
             sessions.pop(k, None)
         while len(sessions) > SESSION_MAX:          # 제일 오래 안 쓴 것부터
             sessions.pop(min(sessions, key=lambda k: sessions[k]["seen"]), None)
+        # ★ 요청마다 같이 치운다 — 셋 다 "켜 둔 동안 계속 차는" 표다.
+        #   hits: IP 마다 deque 가 생기고 비어도 안 없어졌다. 방문자 수만큼 자란다.
+        #   jobs: 결과가 났는데 SSE 로 안 가져간 작업. 탭을 닫으면 끝까지 남는다.
+        for ip in [ip for ip, q in hits.items() if not q or now - q[-1] > 60]:
+            hits.pop(ip, None)
+        for jid in [jid for jid, j in jobs.items() if now - j.created > JOB_TTL_S]:
+            jobs.pop(jid, None)
 
     def _rate_ok(ip: str, now: float) -> bool:
         q = hits[ip]
@@ -140,6 +162,7 @@ def build_app(settings: Settings) -> FastAPI:
         agents_box.clear()
 
     app = FastAPI(title="dog-care-agent", lifespan=lifespan)
+    app.state.tables = {"sessions": sessions, "hits": hits, "jobs": jobs}   # 테스트가 본다
 
     @app.get("/")
     async def index() -> FileResponse:
@@ -153,7 +176,8 @@ def build_app(settings: Settings) -> FastAPI:
                 "failed": agents.failed if agents else {},
                 "tools": sorted(agents.owner) if agents else [],
                 "limits": {"question_chars": MAX_QUESTION, "upload_bytes": MAX_UPLOAD,
-                           "rate_per_min": RATE_PER_MIN, "max_concurrent": MAX_CONCURRENT}}
+                           "rate_per_min": RATE_PER_MIN, "max_concurrent": MAX_CONCURRENT,
+                           "history_messages": HISTORY_MAX_MESSAGES}}
 
     @app.post("/api/ask")
     async def ask(request: Request,
@@ -199,7 +223,7 @@ def build_app(settings: Settings) -> FastAPI:
         state = sessions.setdefault(sid, {"history": [], "screening": None, "seen": now})
         state["seen"] = now
         history = state["history"]
-        job = _Job()
+        job = _Job(now)
         job_id = uuid.uuid4().hex[:8]
         jobs[job_id] = job
 
@@ -210,12 +234,13 @@ def build_app(settings: Settings) -> FastAPI:
             try:
                 async with gate:                    # 동시 실행 상한
                     turn = await run_turn(question, image_path=image_path, guide_box=guide,
-                                          history=list(history),
+                                          history=history[-HISTORY_MAX_MESSAGES:],
                                           prior_screening=state["screening"],
                                           settings=settings, sub=agents, on_event=emit)
                 trace_path = save_trace(turn, settings)
                 history.append({"role": "user", "content": question})
                 history.append({"role": "assistant", "content": turn.answer})
+                del history[:-HISTORY_MAX_MESSAGES]      # 저장도 같은 상한 — 세션이 자라지 않게
                 state["screening"] = _last_screening(turn) or state["screening"]
                 job.result = _summarize(turn, trace_path, sid)
             except Exception as exc:

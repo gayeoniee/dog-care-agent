@@ -40,6 +40,21 @@ class ToolCallingLLM:
         self.calls = 0
         if not settings.llm_api_key:
             raise LLMError("LLM_API_KEY 가 비어 있습니다 — .env 를 확인하세요")
+        #: ★ 연결은 **턴 동안 재사용**한다. 호출마다 `AsyncClient` 를 새로 열면 매번 TLS
+        #:   핸드셰이크를 다시 한다 — Gemini 엔드포인트에 GET 4회 실측: 새 클라이언트마다
+        #:   3.0초, 공유 1.1초 (호출당 약 0.46초). 한 턴이 LLM 을 2~4회 부르니 턴당 0.5~1.4초가
+        #:   그냥 새고 있었다 (p50 4.2초의 1/4). 루프가 턴 끝에 `aclose()` 를 부른다.
+        self._client: httpx.AsyncClient | None = None
+
+    def _http(self) -> httpx.AsyncClient:
+        if self._client is None:
+            self._client = httpx.AsyncClient(timeout=self._s.llm_timeout)
+        return self._client
+
+    async def aclose(self) -> None:
+        if self._client is not None:
+            await self._client.aclose()
+            self._client = None
 
     async def chat(self, messages: list[dict[str, Any]],
                    tools: list[dict[str, Any]] | None = None) -> dict[str, Any]:
@@ -55,33 +70,33 @@ class ToolCallingLLM:
 
         last = ""
         attempts = max(1, self._s.llm_retries)
-        async with httpx.AsyncClient(timeout=self._s.llm_timeout) as client:
-            for i in range(attempts):
-                try:
-                    r = await client.post(
-                        f"{self._s.llm_base_url.rstrip('/')}/chat/completions",
-                        headers={"Authorization": f"Bearer {self._s.llm_api_key}"},
-                        json=body,
-                    )
-                except httpx.RequestError as exc:
-                    last = f"{type(exc).__name__}: {exc}"
-                    await self._backoff(i, None)
-                    continue
+        client = self._http()
+        for i in range(attempts):
+            try:
+                r = await client.post(
+                    f"{self._s.llm_base_url.rstrip('/')}/chat/completions",
+                    headers={"Authorization": f"Bearer {self._s.llm_api_key}"},
+                    json=body,
+                )
+            except httpx.RequestError as exc:
+                last = f"{type(exc).__name__}: {exc}"
+                await self._backoff(i, None)
+                continue
 
-                if r.status_code == 200:
-                    j = r.json()
-                    u = j.get("usage") or {}
-                    self.prompt_tokens += int(u.get("prompt_tokens") or 0)
-                    self.completion_tokens += int(u.get("completion_tokens") or 0)
-                    self.calls += 1
-                    return j["choices"][0]["message"]
+            if r.status_code == 200:
+                j = r.json()
+                u = j.get("usage") or {}
+                self.prompt_tokens += int(u.get("prompt_tokens") or 0)
+                self.completion_tokens += int(u.get("completion_tokens") or 0)
+                self.calls += 1
+                return j["choices"][0]["message"]
 
-                # ★ 본문을 그대로 답니다. 400 일 때 "키가 틀렸나" 로 한참을 보낸 적이
-                #   있는데 실은 툴 스키마의 anyOf 였습니다 (subagents._sanitize 참조).
-                last = f"HTTP {r.status_code} — {r.text[:600]}"
-                if r.status_code not in _RETRYABLE or i == attempts - 1:
-                    raise LLMError(last)
-                await self._backoff(i, r.headers.get("retry-after"))
+            # ★ 본문을 그대로 답니다. 400 일 때 "키가 틀렸나" 로 한참을 보낸 적이
+            #   있는데 실은 툴 스키마의 anyOf 였습니다 (subagents._sanitize 참조).
+            last = f"HTTP {r.status_code} — {r.text[:600]}"
+            if r.status_code not in _RETRYABLE or i == attempts - 1:
+                raise LLMError(last)
+            await self._backoff(i, r.headers.get("retry-after"))
 
         raise LLMError(f"{attempts}회 시도 후 실패 — {last}")
 

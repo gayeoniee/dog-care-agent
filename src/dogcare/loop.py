@@ -34,6 +34,7 @@ from dogcare.llm import ToolCallingLLM
 from dogcare.prompt import SYSTEM
 from dogcare.subagents import Subagents
 from dogcare.trace import ToolCall, Trace
+from dogcare.vocab import group_name
 
 #: 진행 이벤트 — 웹 UI 가 "지금 뭘 하는 중" 을 보여주려고 받는다.
 #: (단계 이름, 부가 정보). 게이트 구조상 스트리밍은 안 되므로(다 받아야 검사한다)
@@ -150,8 +151,19 @@ def _compose(calls: list[ToolCall], facts: TurnFacts) -> str:
     if s:
         parts += [s.get("headline", ""), s.get("body", "")]
         stage2 = s.get("stage2") or {}
-        if group := stage2.get("group"):
-            parts.append(f"모양만 보면 {group} 계열에 가깝습니다. 진단이 아닙니다.")
+        group = stage2.get("group")
+        # ⚠️ `stage2.group` 은 **dict** 다 ({"name", "prob", "text", "feature", "caveat", …}).
+        #    f-string 에 그대로 넣었더니 조립한 답에 `{'name': '…', 'prob': 0.8, …}` 가 찍혔다 —
+        #    "정의상 안전" 하다던 갈래가 파이썬 dict 를 보호자에게 보여 주고 있었다. 적대적 60턴의
+        #    조립 1건은 판정 없는 턴이라 안 드러났다(tests/test_loop.py 가 이제 잡는다).
+        #    계약이 문장(`text`)·특징(`feature`)·주의(`caveat`)를 주면 **그 문장 그대로** 쓴다 —
+        #    저쪽이 사람에게 보여도 된다고 정한 말이다. 없으면 계열 이름으로 같은 틀을 채운다.
+        if name := group_name(group):
+            g = group if isinstance(group, dict) else {}
+            parts.append(str(g.get("text") or f"모양만 보면 {name}에 가깝습니다."))
+            if feature := g.get("feature"):
+                parts.append(f"{feature} 같은 모습이 보이는 상태예요.")
+            parts.append(str(g.get("caveat") or "진단이 아닙니다."))
         if alert := stage2.get("alert"):
             parts.append(str(alert))
         parts.append(s.get("action", ""))
@@ -206,6 +218,14 @@ async def run_turn(question: str, image_path: str | None = None,
 
     async def _go(agents: Subagents) -> Turn:
         llm = ToolCallingLLM(settings)
+        try:
+            return await _turn(agents, llm)
+        finally:
+            # 턴 동안 재사용한 HTTP 연결을 닫는다 (llm.py 참고). 가짜 LLM 은 없을 수 있다.
+            if close := getattr(llm, "aclose", None):
+                await close()
+
+    async def _turn(agents: Subagents, llm: Any) -> Turn:
         pinned: dict[str, dict[str, Any]] = {}
         user = question
         if image_path:

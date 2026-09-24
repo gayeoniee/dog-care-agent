@@ -1,0 +1,23 @@
+# HF Space 는 48시간 아무도 안 부르면 잠들고, 첫 방문자가 1~2분을 기다린다 (무료 ZeroGPU).
+# 포트폴리오 링크를 누른 사람이 그 1~2분을 보게 두지 않으려고 하루 두 번 /api/health 를 부른다.
+# 잠들어 있으면 이 요청이 깨운다 — 그때는 200 이 아닐 수 있어서 상태 코드로 실패시키지 않는다.
+#
+# ⚠️ GitHub 은 60일 동안 커밋이 없는 저장소의 schedule 워크플로를 꺼 버린다. 그때는
+#    Actions 탭에서 "Enable workflow" 를 누르거나 아무 커밋이나 한 번 한다.
+name: keepalive
+on:
+  schedule:
+    - cron: "17 3,15 * * *"     # UTC 03:17 · 15:17 = 한국 12:17 · 00:17
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Space /api/health
+        run: |
+          code=$(curl -s -o /tmp/health.json -w '%{http_code}' --max-time 120 \
+                 https://gayoniee-dog-care-agent.hf.space/api/health || true)
+          echo "HTTP $code"
+          head -c 400 /tmp/health.json || true; echo
+          # 잠든 Space 는 첫 요청에 HF 의 대기 페이지를 돌려준다 — 그 요청이 깨우는 것이니 성공이다.

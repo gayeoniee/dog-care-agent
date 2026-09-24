@@ -19,7 +19,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-      - run: uv sync --group dev
+      - run: uv sync --locked --group dev   # lock 이 pyproject 와 어긋나면 여기서 빨개진다
       - run: uv run ruff check .
       - run: uv run python -m pytest -q
         env:
