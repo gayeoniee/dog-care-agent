@@ -22,6 +22,9 @@ os.environ.setdefault("DOGCARE_DEMO", "1")
 os.environ.setdefault("RATE_PER_MIN", "6")
 os.environ.setdefault("MAX_CONCURRENT", "2")
 os.environ.setdefault("TRACE_DIR", "/tmp/traces")
+# 무료 티어는 키당 하루 500회. 재시도까지 세면 450 에서 끊어야 데모가 저녁까지 산다.
+os.environ.setdefault("DAILY_LLM_CALLS", "450")
+os.environ.setdefault("DAILY_TOKENS_PER_IP", "150000")     # 턴당 약 6천 토큰 → 한 사람 25턴쯤
 os.environ.setdefault("PYTHONUTF8", "1")
 
 from dogcare.server import serve  # noqa: E402

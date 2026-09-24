@@ -52,6 +52,10 @@ class Settings:
     #: 429·503 재시도 횟수. 무료 티어는 "high demand" 503 이 자주 난다.
     llm_retries: int = int(os.environ.get("LLM_RETRIES", "4"))
 
+    #: 서브에이전트 한 호출의 상한(초). **없으면 멈춘 모델 하나가 요청을 영영 매답니다** —
+    #: LLM 타임아웃은 LLM 만 보고, MCP 호출은 아무도 안 봤다. 진짜 모드의 첫 호출은 가중치
+    #: 1.2GB 를 받고 올리는 시간이 들어가므로 넉넉히 둔다. 넘으면 그 툴만 오류로 돌아온다.
+    tool_timeout: float = float(os.environ.get("TOOL_TIMEOUT_SECONDS", "300"))
     #: 한 턴에 허용할 툴 호출 왕복. 넘으면 **답을 만들지 않고 멈춥니다** —
     #: 루프가 도는 걸 모르고 토큰을 태우는 게 제일 흔한 사고입니다.
     max_tool_rounds: int = int(os.environ.get("MAX_TOOL_ROUNDS", "6"))

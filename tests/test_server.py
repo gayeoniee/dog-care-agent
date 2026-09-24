@@ -55,9 +55,11 @@ class _FakeLLM:
 
     def __init__(self, settings) -> None:
         self.n = 0
+        self.calls = 0           # 루프가 trace.llm_calls 로 옮긴다 — 하루 상한이 센다
 
     async def chat(self, messages, tools=None):
         self.n += 1
+        self.calls = self.n
         has_img = "screen_skin_photo 를 부르세요" in messages[-1].get("content", "") \
             if messages[-1].get("role") == "user" else False
         if self.n == 1 and has_img:
@@ -253,3 +255,50 @@ def test_비거나_오래된_레이트_리밋_항목은_치운다(client):
     tables["hits"]["203.0.113.10"] = deque()
     client.post("/api/ask", data={"question": "안녕"})
     assert "203.0.113.9" not in tables["hits"] and "203.0.113.10" not in tables["hits"]
+
+
+def test_모르는_세션_id_는_새_세션이_된다(client):
+    r = client.post("/api/ask", data={"question": "안녕", "session_id": "deadbeef"})
+    assert r.json()["session_id"] != "deadbeef"
+    assert r.headers["x-request-id"] == r.json()["request_id"]
+
+
+def test_트레이스는_그_세션만_연다(client):
+    r = client.post("/api/ask", data={"question": "봐줘"},
+                    files={"image": ("x.jpg", JPEG, "image/jpeg")})
+    sid = r.json()["session_id"]
+    res = _result(client, r.json()["job_id"])
+    assert client.get(f"/api/trace/{res['trace']}").status_code == 404
+    assert client.get(f"/api/trace/{res['trace']}?session_id=other").status_code == 404
+    assert client.get(f"/api/trace/{res['trace']}?session_id={sid}").status_code == 200
+
+
+def test_API_TOKEN_이_있으면_Bearer_를_요구한다(client, monkeypatch):
+    monkeypatch.setattr(server, "API_TOKEN", "s3cret")
+    assert client.post("/api/ask", data={"question": "안녕"}).status_code == 401
+    assert client.get("/api/stats").status_code == 401
+    ok = client.post("/api/ask", data={"question": "안녕"},
+                     headers={"Authorization": "Bearer s3cret"})
+    assert ok.status_code == 200
+    assert client.get("/api/health").status_code == 200        # health 는 열려 있다
+
+
+def test_하루_LLM_호출_상한을_넘으면_429(client, monkeypatch):
+    monkeypatch.setattr(server, "DAILY_LLM_CALLS", 1)
+    r = client.post("/api/ask", data={"question": "안녕"})
+    _result(client, r.json()["job_id"])                         # 가짜 LLM 이 1회 센다
+    assert client.app.state.tables["daily"]["llm_calls"] >= 1
+    r2 = client.post("/api/ask", data={"question": "또"})
+    assert r2.status_code == 429 and "한도" in r2.text
+
+
+def test_턴마다_JSON_로그_한_줄(client, caplog):
+    import logging
+
+    with caplog.at_level(logging.INFO, logger="dogcare.server"):
+        r = client.post("/api/ask", data={"question": "안녕"})
+        _result(client, r.json()["job_id"])
+    lines = [json.loads(rec.message) for rec in caplog.records if rec.name == "dogcare.server"]
+    turn = [x for x in lines if x["event"] == "turn"]
+    assert turn and turn[0]["request_id"] == r.json()["request_id"]
+    assert "안녕" not in json.dumps(turn[0], ensure_ascii=False)   # 질문 원문은 로그에 없다

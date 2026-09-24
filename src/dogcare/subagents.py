@@ -13,18 +13,28 @@ import 하나로 둘 다 안 뜹니다.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import sys
-from contextlib import AsyncExitStack
+from collections import Counter
+from contextlib import AsyncExitStack, suppress
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+import anyio
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 from dogcare.config import ROOT, Settings
+
+#: 서브에이전트 프로세스가 **죽었다**는 신호. stdio 파이프가 닫히면 이 중 하나로 옵니다.
+#: 툴이 "실패했다"(is_error) 는 것과 다릅니다 — 그건 살아 있는 서버의 정상 응답입니다.
+_DEAD = (anyio.ClosedResourceError, anyio.BrokenResourceError, anyio.EndOfStream,
+         BrokenPipeError, ConnectionError, EOFError)
+#: 타임아웃 뒤 "살아는 있나" 를 묻는 시간. 이 안에 ping 도 못 받으면 죽은 것으로 봅니다.
+_PING_TIMEOUT = 5.0
 
 
 def _spec(settings: Settings) -> list[dict[str, Any]]:
@@ -112,12 +122,15 @@ class Subagents:
     tools: list[dict[str, Any]] = field(default_factory=list)
     owner: dict[str, str] = field(default_factory=dict)
     failed: dict[str, str] = field(default_factory=dict)
-    _stack: AsyncExitStack | None = None
+    #: 돌다가 죽어서 다시 띄운 횟수. health 와 trace 에 적힙니다.
+    restarts: Counter[str] = field(default_factory=Counter)
+    _specs: dict[str, dict[str, Any]] = field(default_factory=dict)
+    #: 서브에이전트마다 자기 스택 — 하나만 닫고 다시 열 수 있어야 재기동이 됩니다.
+    _stacks: dict[str, AsyncExitStack] = field(default_factory=dict)
 
     async def __aenter__(self) -> Subagents:
-        self._stack = AsyncExitStack()
-        await self._stack.__aenter__()
         for spec in _spec(self.settings):
+            self._specs[spec["key"]] = spec
             try:
                 await self._open(spec)
             except Exception as exc:
@@ -128,10 +141,18 @@ class Subagents:
         return self
 
     async def __aexit__(self, *exc: Any) -> None:
-        if self._stack:
-            await self._stack.aclose()
+        for key in list(self._stacks):
+            await self._close(key)
 
-    async def _open(self, spec: dict[str, Any]) -> None:
+    async def _close(self, key: str) -> None:
+        """한 서브에이전트만 내립니다. 이미 죽은 프로세스면 닫다가 또 예외가 나는데, 삼킵니다."""
+        self.sessions.pop(key, None)
+        if stack := self._stacks.pop(key, None):
+            with suppress(Exception):
+                await stack.aclose()
+
+    async def _connect(self, spec: dict[str, Any]) -> ClientSession:
+        """프로세스를 띄우고 세션을 엽니다. 툴 등록은 안 합니다 — 재기동 때는 이것만 합니다."""
         project = Path(spec["project"])
         if not project.exists():
             raise FileNotFoundError(f"서브레포가 없습니다: {project} — .env 의 경로를 확인하세요")
@@ -154,11 +175,21 @@ class Subagents:
             env={k: v for k, v in os.environ.items() if v and k != "VIRTUAL_ENV"}
                 | {k: v for k, v in spec["env"].items() if v},
         )
-        assert self._stack is not None
-        read, write = await self._stack.enter_async_context(stdio_client(params))
-        session = await self._stack.enter_async_context(ClientSession(read, write))
-        await session.initialize()
+        stack = AsyncExitStack()
+        await stack.__aenter__()
+        try:
+            read, write = await stack.enter_async_context(stdio_client(params))
+            session = await stack.enter_async_context(ClientSession(read, write))
+            await session.initialize()
+        except BaseException:
+            await stack.aclose()
+            raise
+        self._stacks[spec["key"]] = stack
         self.sessions[spec["key"]] = session
+        return session
+
+    async def _open(self, spec: dict[str, Any]) -> None:
+        session = await self._connect(spec)
         for tool in (await session.list_tools()).tools:
             if tool.name in self.owner:
                 raise RuntimeError(f"툴 이름이 겹칩니다: {tool.name}")
@@ -171,11 +202,62 @@ class Subagents:
                                  _attr(tool, "input_schema", "inputSchema", default={}))},
             })
 
+    async def _reopen(self, key: str) -> bool:
+        """죽은 서브에이전트를 **한 번** 다시 띄웁니다. 못 띄우면 `failed` 에 적고 False."""
+        await self._close(key)
+        try:
+            await self._connect(self._specs[key])
+        except Exception as exc:
+            self.failed[key] = f"재기동 실패 — {type(exc).__name__}: {exc}"
+            return False
+        self.restarts[key] += 1
+        self.failed.pop(key, None)
+        return True
+
+    async def _alive(self, key: str) -> bool:
+        """타임아웃 뒤에 묻습니다 — 느린 건가, 죽은 건가. ping 도 못 받으면 죽은 것입니다."""
+        session = self.sessions.get(key)
+        if session is None:
+            return False
+        try:
+            await asyncio.wait_for(session.send_ping(), timeout=_PING_TIMEOUT)
+            return True
+        except Exception:
+            return False
+
     async def call(self, name: str, arguments: dict[str, Any]) -> Any:
+        """툴 하나를 부릅니다. **타임아웃이 있고, 죽은 서브에이전트는 한 번 다시 띄웁니다.**
+
+        전에는 둘 다 없었다 — 진짜 모드에서 피부 모델이 멈추면 그 요청은 LLM 타임아웃과 무관하게
+        영영 매달렸고(동시 상한이 2 라 두 번이면 서버 전체가 답을 못 한다), 돌다가 프로세스가 죽으면
+        그 뒤 모든 호출이 오류였다. 기동 실패만 `failed` 에 남고 도중 죽음은 아무도 안 봤다.
+
+        타임아웃은 재기동 사유가 아니다 — 느린 추론을 죽이면 안 된다. 대신 ping 으로 살아 있나
+        묻고, 그것마저 안 오면 그때 다시 띄운다.
+        """
         key = self.owner.get(name)
         if key is None:
             return {"error": f"그런 툴이 없습니다: {name}"}
-        res = await self.sessions[key].call_tool(name, arguments)
+        limit = self.settings.tool_timeout
+        for attempt in (1, 2):
+            session = self.sessions.get(key)
+            if session is None:
+                if attempt == 2 or not await self._reopen(key):
+                    return {"error": f"서브에이전트 {key} 가 붙어 있지 않습니다 — "
+                                     f"{self.failed.get(key, '이유 없음')}"}
+                continue
+            try:
+                res = await asyncio.wait_for(session.call_tool(name, arguments), timeout=limit)
+            except TimeoutError:
+                if await self._alive(key):
+                    return {"error": f"툴이 {limit:.0f}초 안에 답하지 않았습니다: {name}"}
+                await self._reopen(key)          # 죽은 것 — 다음 호출을 위해 다시 띄운다
+                return {"error": f"서브에이전트 {key} 가 응답하지 않아 다시 띄웠습니다: {name}"}
+            except _DEAD as exc:
+                if attempt == 2 or not await self._reopen(key):
+                    return {"error": f"서브에이전트 {key} 가 죽었습니다 — {type(exc).__name__}"}
+                continue                          # 다시 띄웠으니 한 번 더
+            break
         if _attr(res, "is_error", "isError"):
             return {"error": "".join(getattr(c, "text", "") for c in res.content)}
         # dict 를 돌려주는 툴은 structured_content 로 옵니다 (mcp 1.x 는 structuredContent).

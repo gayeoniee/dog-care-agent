@@ -20,21 +20,34 @@ MCP 프로세스 둘이 매번 뜨고, 진짜 모드에서는 bge-m3 2.3GB 와 �
   누가 반복 호출해 쿼터를 태웁니다.
 - 앞 대화는 마지막 HISTORY_MAX_MESSAGES 개만 LLM 에 넘깁니다. 안 자르면 긴 대화가
   턴마다 프롬프트를 키웁니다. 레이트 리밋 표와 작업 표도 요청마다 치웁니다.
-- 인증은 없습니다. 인터넷에 열 때는 앞에 인증 프록시를 둡니다.
+- 세션 id 와 작업 id 는 **서버가 발급**합니다(96비트). 클라이언트가 보낸 모르는 id 는 새 세션이
+  됩니다 — 남의 id 를 지어내 그 대화 위에서 답하게 할 수 없습니다. 트레이스는 그 세션이 만든
+  것만 돌려줍니다.
+- API_TOKEN 을 두면 /api/ask · /api/trace · /api/stats 가 Bearer 토큰을 요구합니다. 데모는 비워
+  둡니다.
+  /api/events 는 작업 id 자체가 비밀이라(발급받은 사람만 안다) 따로 안 잠급니다.
+- 하루 상한: DAILY_LLM_CALLS(서버 전체 — 무료 티어 하루 500회를 한 사람이 다 못 쓰게) ·
+  DAILY_TOKENS_PER_IP. 날짜는 QUOTA_TZ(기본 태평양 — Gemini 리셋 시각) 기준. 0 이면 끕니다.
+- 턴마다 JSON 한 줄을 로그로 남깁니다(요청 id · 세션 · 지연 · 왕복 · 토큰 · 게이트 · 툴). 질문
+  원문은 안 남깁니다 — 그건 트레이스 파일의 일이고, 로그는 흐름을 보는 자리입니다.
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
+import secrets
 import time
 import uuid
-from collections import defaultdict, deque
+from collections import Counter, defaultdict, deque
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import datetime
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
@@ -57,6 +70,17 @@ HISTORY_MAX_MESSAGES = int(os.environ.get("HISTORY_MAX_MESSAGES", "10"))
 #: 결과를 아무도 안 받아 간 작업을 치우는 나이. SSE 를 안 열거나 도중에 끊으면 `jobs` 항목이
 #: 영영 남는다 — 공개 데모에서 탭을 닫는 사람이 곧 그 경우다.
 JOB_TTL_S = 5 * 60
+#: 비워 두면 인증 없음(데모). 두면 /api/ask · /api/trace · /api/stats 가 Bearer 토큰을 본다.
+API_TOKEN = os.environ.get("API_TOKEN", "")
+#: 하루 상한. 0 = 끔. LLM 호출 수는 서버 전체로 센다 — 무료 티어는 **키당** 하루 500회라
+#: 사람별로 나눠 봐야 의미가 없고, 한 사람이 남의 몫까지 태우는 것을 막는 게 목적이다.
+DAILY_LLM_CALLS = int(os.environ.get("DAILY_LLM_CALLS", "0"))
+DAILY_TOKENS_PER_IP = int(os.environ.get("DAILY_TOKENS_PER_IP", "0"))
+#: "하루" 의 경계. Gemini 무료 티어는 태평양 자정(한국 16:00)에 리셋된다.
+# Windows 에는 시스템 tz 데이터가 없어 `tzdata` 패키지를 의존성에 둔다.
+QUOTA_TZ = ZoneInfo(os.environ.get("QUOTA_TZ", "America/Los_Angeles"))
+
+log = logging.getLogger("dogcare.server")
 RATE_PER_MIN = int(os.environ.get("RATE_PER_MIN", "10"))
 MAX_CONCURRENT = int(os.environ.get("MAX_CONCURRENT", "2"))
 
@@ -123,6 +147,18 @@ class _Job:
         self.created = now
 
 
+def _day(now: float) -> str:
+    return datetime.fromtimestamp(now, QUOTA_TZ).strftime("%Y-%m-%d")
+
+
+def _authorized(request: Request) -> bool:
+    if not API_TOKEN:
+        return True
+    auth = request.headers.get("authorization", "")
+    given = auth[7:] if auth.lower().startswith("bearer ") else request.headers.get("x-api-key", "")
+    return bool(given) and secrets.compare_digest(given, API_TOKEN)
+
+
 def build_app(settings: Settings) -> FastAPI:
     agents_box: dict[str, Subagents] = {}
     jobs: dict[str, _Job] = {}
@@ -130,7 +166,24 @@ def build_app(settings: Settings) -> FastAPI:
     #: 같은 이어 묻기가 앞 턴 판정 위에서 답하므로, 게이트도 그 판정을 봐야 한다.
     sessions: dict[str, dict[str, Any]] = {}
     hits: dict[str, deque[float]] = defaultdict(deque)
+    #: 오늘의 소비. 날짜가 바뀌면 통째로 새로 센다.
+    daily: dict[str, Any] = {"day": "", "llm_calls": 0, "tokens": Counter()}
     gate = asyncio.Semaphore(MAX_CONCURRENT)
+
+    def _today(now: float) -> dict[str, Any]:
+        d = _day(now)
+        if daily["day"] != d:
+            daily.update(day=d, llm_calls=0, tokens=Counter())
+        return daily
+
+    def _quota_ok(ip: str, now: float) -> str | None:
+        """넘었으면 보호자에게 보일 문장, 아니면 None."""
+        t = _today(now)
+        if DAILY_LLM_CALLS and t["llm_calls"] >= DAILY_LLM_CALLS:
+            return "오늘 이 데모의 무료 이용 한도를 다 썼습니다. 내일 다시 시도해 주세요."
+        if DAILY_TOKENS_PER_IP and t["tokens"][ip] >= DAILY_TOKENS_PER_IP:
+            return "오늘 이 연결에서 쓸 수 있는 양을 다 썼습니다. 내일 다시 시도해 주세요."
+        return None
 
     def _evict_sessions(now: float) -> None:
         for k in [k for k, s in sessions.items() if now - s["seen"] > SESSION_TTL_S]:
@@ -162,7 +215,8 @@ def build_app(settings: Settings) -> FastAPI:
         agents_box.clear()
 
     app = FastAPI(title="dog-care-agent", lifespan=lifespan)
-    app.state.tables = {"sessions": sessions, "hits": hits, "jobs": jobs}   # 테스트가 본다
+    # 테스트가 표를 본다
+    app.state.tables = {"sessions": sessions, "hits": hits, "jobs": jobs, "daily": daily}
 
     @app.get("/")
     async def index() -> FileResponse:
@@ -171,13 +225,20 @@ def build_app(settings: Settings) -> FastAPI:
     @app.get("/api/health")
     async def health() -> dict[str, Any]:
         agents = agents_box.get("agents")
+        t = _today(time.time())
         return {"ok": agents is not None, "demo": settings.demo, "model": settings.llm_model,
                 "subagents": sorted(agents.sessions) if agents else [],
                 "failed": agents.failed if agents else {},
+                "restarts": dict(getattr(agents, "restarts", {}) or {}),
                 "tools": sorted(agents.owner) if agents else [],
+                "auth": bool(API_TOKEN),
                 "limits": {"question_chars": MAX_QUESTION, "upload_bytes": MAX_UPLOAD,
                            "rate_per_min": RATE_PER_MIN, "max_concurrent": MAX_CONCURRENT,
-                           "history_messages": HISTORY_MAX_MESSAGES}}
+                           "history_messages": HISTORY_MAX_MESSAGES,
+                           "tool_timeout_s": settings.tool_timeout,
+                           "daily_llm_calls": DAILY_LLM_CALLS,
+                           "daily_tokens_per_ip": DAILY_TOKENS_PER_IP},
+                "today": {"day": t["day"], "llm_calls": t["llm_calls"]}}
 
     @app.post("/api/ask")
     async def ask(request: Request,
@@ -185,6 +246,8 @@ def build_app(settings: Settings) -> FastAPI:
                   session_id: str = Form(""),
                   box: str = Form(""),
                   image: UploadFile | None = File(None)) -> JSONResponse:  # noqa: B008 — FastAPI 관용구
+        if not _authorized(request):
+            raise HTTPException(401, "토큰이 필요합니다")
         agents = agents_box.get("agents")
         if agents is None:
             raise HTTPException(503, "서브에이전트가 아직 안 떴습니다")
@@ -192,6 +255,8 @@ def build_app(settings: Settings) -> FastAPI:
         ip = client_ip(request)
         if not _rate_ok(ip, now):
             raise HTTPException(429, f"분당 {RATE_PER_MIN}회까지입니다. 잠시 뒤에 다시 보내주세요")
+        if over := _quota_ok(ip, now):
+            raise HTTPException(429, over)
         question = question.strip()
         if not question:
             raise HTTPException(400, "질문이 비어 있습니다")
@@ -219,13 +284,17 @@ def build_app(settings: Settings) -> FastAPI:
                 raise HTTPException(400, "box 는 0~1 사이 네 숫자입니다") from None
 
         _evict_sessions(now)
-        sid = session_id or uuid.uuid4().hex[:8]
-        state = sessions.setdefault(sid, {"history": [], "screening": None, "seen": now})
+        # ★ 세션 id 는 서버가 준다. 전에는 클라이언트가 보낸 8자리를 그대로 열쇠로 써서, 남의
+        #   id 를 지어내면 그 대화 이력과 판정 위에서 답했다. 모르는 id 는 새 세션이다.
+        sid = session_id if session_id in sessions else secrets.token_urlsafe(12)
+        state = sessions.setdefault(sid, {"history": [], "screening": None, "seen": now,
+                                          "traces": set()})
         state["seen"] = now
         history = state["history"]
         job = _Job(now)
-        job_id = uuid.uuid4().hex[:8]
+        job_id = secrets.token_urlsafe(12)
         jobs[job_id] = job
+        request_id = job_id
 
         def emit(kind: str, info: dict[str, Any]) -> None:
             job.q.put_nowait({"kind": kind, **info})
@@ -242,16 +311,38 @@ def build_app(settings: Settings) -> FastAPI:
                 history.append({"role": "assistant", "content": turn.answer})
                 del history[:-HISTORY_MAX_MESSAGES]      # 저장도 같은 상한 — 세션이 자라지 않게
                 state["screening"] = _last_screening(turn) or state["screening"]
-                job.result = _summarize(turn, trace_path, sid)
+                state["traces"].add(trace_path.name)
+                t = _today(time.time())
+                t["llm_calls"] += turn.trace.llm_calls
+                t["tokens"][ip] += turn.trace.prompt_tokens + turn.trace.completion_tokens
+                job.result = {**_summarize(turn, trace_path, sid), "request_id": request_id}
+                log.info(json.dumps({
+                    "event": "turn", "request_id": request_id, "session": sid[:6], "ip": ip,
+                    "image": bool(image_path), "elapsed_ms": turn.trace.elapsed_ms,
+                    "rounds": turn.trace.rounds, "llm_calls": turn.trace.llm_calls,
+                    "prompt_tokens": turn.trace.prompt_tokens,
+                    "completion_tokens": turn.trace.completion_tokens,
+                    "first_pass": turn.trace.first_pass_violations,
+                    "repaired": turn.trace.repaired, "composed": turn.composed,
+                    "blocked": turn.trace.blocked,
+                    "tools": {c.name: round(c.elapsed_ms) for c in turn.trace.calls},
+                    "tool_errors": [c.name for c in turn.trace.calls if c.error],
+                    "subagent_failures": turn.trace.subagent_failures,
+                    "trace": trace_path.name}, ensure_ascii=False))
             except Exception as exc:
-                job.result = {"error": user_facing_error(exc)}
+                job.result = {"error": user_facing_error(exc), "request_id": request_id}
+                log.error(json.dumps({"event": "turn_error", "request_id": request_id,
+                                      "session": sid[:6], "ip": ip,
+                                      "error": f"{type(exc).__name__}: {exc}"[:300]},
+                                     ensure_ascii=False))
             finally:
                 if image_path and not KEEP_UPLOADS:
                     Path(image_path).unlink(missing_ok=True)   # 판정 끝나면 사진은 지운다
                 job.q.put_nowait(None)
 
         job.task = asyncio.create_task(run())      # 참조를 잡아 두지 않으면 GC 가 태스크를 지운다
-        return JSONResponse({"job_id": job_id, "session_id": sid})
+        return JSONResponse({"job_id": job_id, "session_id": sid, "request_id": request_id},
+                            headers={"X-Request-ID": request_id})
 
     @app.get("/api/events/{job_id}")
     async def events(job_id: str) -> StreamingResponse:
@@ -272,9 +363,12 @@ def build_app(settings: Settings) -> FastAPI:
                                  headers={"Cache-Control": "no-cache"})
 
     @app.get("/api/stats")
-    async def stats() -> dict[str, Any]:
+    async def stats(request: Request) -> dict[str, Any]:
         """traces/ 집계 — 화면이 "이 서버가 지금까지 뭘 막았나" 를 보여주려고 부른다."""
         from dogcare.stats import collect
+
+        if not _authorized(request):
+            raise HTTPException(401, "토큰이 필요합니다")
 
         s = collect(settings.trace_dir)
         return {"turns": s.turns, "first_pass_hit": s.first_pass_hit, "repaired": s.repaired,
@@ -283,9 +377,15 @@ def build_app(settings: Settings) -> FastAPI:
                 "tool_errors": dict(s.tool_errors)}
 
     @app.get("/api/trace/{name}")
-    async def trace(name: str) -> FileResponse:
-        p = settings.trace_dir / f"{Path(name).name}"
-        if not p.exists() or p.suffix != ".json":
+    async def trace(name: str, request: Request, session_id: str = "") -> FileResponse:
+        """**그 세션이 만든 트레이스만** 돌려준다. 전에는 이름만 알면 누구 것이든 열렸다 —
+        이름이 48비트 난수라 못 맞힐 뿐, 접근 제어가 아니라 난수에 기대는 상태였다."""
+        if not _authorized(request):
+            raise HTTPException(401, "토큰이 필요합니다")
+        name = Path(name).name
+        owned = sessions.get(session_id, {}).get("traces") or set()
+        p = settings.trace_dir / name
+        if name not in owned or not p.exists() or p.suffix != ".json":
             raise HTTPException(404)
         return FileResponse(p, media_type="application/json")
 
@@ -334,4 +434,8 @@ def serve(host: str = "127.0.0.1", port: int = 8765, demo: bool = False) -> None
 
     settings = get_settings().with_demo(demo)
     require_llm_key(settings)
+    # 우리 로그는 턴마다 JSON 한 줄. uvicorn 의 접근 로그는 끈 채로 둔다(warning).
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+    logging.getLogger("dogcare").setLevel(logging.INFO)
+    logging.getLogger("httpx").setLevel(logging.WARNING)   # 호출마다 URL 한 줄 찍는 것은 잡음
     uvicorn.run(build_app(settings), host=host, port=port, log_level="warning")
